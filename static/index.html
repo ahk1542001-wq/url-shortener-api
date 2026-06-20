@@ -15,7 +15,16 @@
     
     <div class="container">
         <header>
-            <h1>Swoosh</h1>
+            <div class="header-row">
+                <h1>Swoosh</h1>
+                <button id="logout-btn" class="logout-btn hidden" title="Logout">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
             <p>Make your links magically short</p>
         </header>
 
@@ -84,11 +93,10 @@
                     <button id="new-link-btn" class="secondary-btn">Shorten Another</button>
                 </div>
 
-            </div>
-
+                </div>
             </div> <!-- end app-card -->
 
-            <div class="glass-card my-links-card">
+            <div class="glass-card my-links-card hidden" id="my-links-card">
                 <div class="my-links-header">
                     <h3>My Links</h3>
                     <button id="refresh-links-btn" class="icon-btn" title="Refresh">🔄</button>

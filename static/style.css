@@ -76,6 +76,38 @@ header {
     margin-bottom: 2rem;
 }
 
+.header-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.logout-btn {
+    position: absolute;
+    right: 0;
+    width: auto;
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-btn:hover {
+    color: var(--error);
+    border-color: var(--error);
+    background: rgba(255, 71, 87, 0.1);
+    box-shadow: none;
+    transform: none;
+}
+
 header h1 {
     font-size: 3rem;
     font-weight: 700;

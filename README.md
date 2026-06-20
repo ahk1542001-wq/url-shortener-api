@@ -38,7 +38,8 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 | **Rate limiting** | 30 requests per minute per IP to prevent abuse |
 | **Security headers** | Every response includes anti-XSS, anti-clickjacking headers |
 | **Input validation** | Rejects bad URLs, short codes with special chars, reserved words |
-| **Password protection** | Password required for POST/DELETE (prevents public abuse) |
+| **Password protection** | Password required for POST/DELETE, login gate with show/hide toggle, logout button |
+| **Link history** | My Links section visible only after login |
 | **Health check** | `GET /api/health` returns `{"status": "ok"}` for monitoring |
 
 ## How It Works
@@ -69,7 +70,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 - **Backend:** Python 3.11 + FastAPI
 - **Database:** Neon PostgreSQL (free, permanent) — falls back to SQLite for local dev
 - **Hosting:** Render (free tier)
-- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism design, password gate with show/hide toggle
+- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism, password gate (eye toggle), logout button, links hidden until login
 - **Testing:** pytest (19 tests passing)
 - **Linting:** Ruff
 - **MCP:** mcp-server-sqlite for live database inspection during development

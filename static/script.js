@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordBtn = document.getElementById('password-btn');
     const passwordError = document.getElementById('password-error');
     const togglePassword = document.getElementById('toggle-password');
+    const logoutBtn = document.getElementById('logout-btn');
+    const myLinksCard = document.getElementById('my-links-card');
 
     const form = document.getElementById('shorten-form');
     const urlInput = document.getElementById('url');
@@ -36,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showApp() {
         passwordCard.classList.add('hidden');
         appCard.classList.remove('hidden');
+        myLinksCard.classList.remove('hidden');
+        logoutBtn.classList.remove('hidden');
         loadLinks();
     }
 
@@ -206,4 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     refreshLinksBtn.addEventListener('click', loadLinks);
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('swoosh_password');
+        location.reload();
+    });
 });
