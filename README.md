@@ -1,5 +1,17 @@
 # Swoosh — URL Shortener API
 
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-19%20passing-brightgreen?style=for-the-badge)
+![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
+
+> **Like bit.ly, but you own it.** A self-hosted URL shortener with click tracking, rate limiting, and a glassmorphism UI.
+
+🔗 **Live:** [url-shortener-api-jcbx.onrender.com](https://url-shortener-api-jcbx.onrender.com)
+
+---
+
 ## What Is This?
 
 Swoosh is a self-hosted URL shortener — like bit.ly, but you own it. Paste a long URL, get a short code back. Share the short link anywhere. When someone clicks it, they get redirected to the original URL while Swoosh tracks how many times it was clicked.
@@ -28,6 +40,29 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 | **Input validation** | Rejects bad URLs, short codes with special chars, reserved words |
 | **Health check** | `GET /api/health` returns `{"status": "ok"}` for monitoring |
 
+## How It Works
+
+```
+  ┌─────────────────────────────────────────────────────────┐
+  │  Paste your long URL                                     │
+  │  https://example.com/very/long/path/to/something?foo=bar  │
+  └────────────────────────┬────────────────────────────────┘
+                           │
+                           ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │  Get a short link                                        │
+  │  https://url-shortener-api-jcbx.onrender.com/aB3xYz      │
+  │                                                          │
+  │  [Copy]  [View Analytics]                                │
+  └────────────────────────┬────────────────────────────────┘
+                           │
+                           ▼
+  ┌─────────────────────────────────────────────────────────┐
+  │  Someone clicks it → 302 redirect to original URL        │
+  │  Click count: 1 → 2 → 3 → ...                           │
+  └─────────────────────────────────────────────────────────┘
+```
+
 ## Tech Stack
 
 - **Backend:** Python 3.11 + FastAPI
@@ -42,16 +77,35 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
-│   Browser   │────▶│  FastAPI App  │────▶│ Neon PostgreSQL   │
-│  (Frontend) │     │  (Render)     │     │ (Free, Permanent) │
-└─────────────┘     └──────────────┘     └──────────────────┘
-                           │
-                     ┌─────┴─────┐
-                     │ Rate Limit│ (30 req/min per IP)
-                     │ Validation│ (Pydantic)
-                     │ Security  │ (Headers)
-                     └───────────┘
+                    ┌──────────────────┐
+                    │     Browser      │
+                    │  (Glassmorphism  │
+                    │      UI)         │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │   Render (Free)  │
+                    │                  │
+                    │  ┌────────────┐  │
+                    │  │  FastAPI   │  │
+                    │  │            │  │
+                    │  │ • Rate Limit│  │
+                    │  │ • Validate │  │
+                    │  │ • Headers  │  │
+                    │  └─────┬──────┘  │
+                    │        │         │
+                    └────────┼─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ Neon PostgreSQL  │
+                    │  (Free, Forever) │
+                    │                  │
+                    │ • URLs table     │
+                    │ • Click tracking │
+                    │ • Deduplication  │
+                    └──────────────────┘
 ```
 
 ## API Endpoints
