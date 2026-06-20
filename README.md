@@ -170,14 +170,20 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Copy env template (SQLite by default — no database setup needed)
-cp .env.example .env
+# Create your .env file
+cat > .env << EOF
+DB_NAME=shortener.db
+HOST=0.0.0.0
+PORT=5000
+RATE_LIMIT=30/minute
+ACCESS_PASSWORD=choose-your-own-password
+EOF
 
 # Start the server
 uvicorn app:app --reload --port 5000
 ```
 
-Open http://localhost:5000 for the web UI.
+Open http://localhost:5000 — enter your password to start shortening URLs.
 
 ## Deploy Your Own
 
