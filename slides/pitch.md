@@ -75,10 +75,11 @@ Browser → FastAPI (Render) → Neon PostgreSQL
 | URL validation | `startswith("http")` | Pydantic HttpUrl, 2048 char limit |
 | Custom codes | No limits | 3-20 chars, alphanumeric, reserved words blocked |
 | Rate limiting | None | 30/min on POST via slowapi |
+| Password | None | Password required for POST/DELETE |
 | Errors | Raw HTTPException | Structured JSON everywhere |
 | Database | SQLite, open/close per request | Context managers, Neon PostgreSQL |
 | Config | Hardcoded | .env-driven |
-| Tests | None | 19 passing |
+| Tests | None | 26 passing |
 | Security | None | Headers on every response |
 
 ---

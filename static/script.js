@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const passwordCard = document.getElementById('password-card');
+    const appCard = document.getElementById('app-card');
+    const passwordInput = document.getElementById('password');
+    const passwordBtn = document.getElementById('password-btn');
+    const passwordError = document.getElementById('password-error');
+
     const form = document.getElementById('shorten-form');
     const urlInput = document.getElementById('url');
     const customCodeInput = document.getElementById('custom_code');
@@ -14,6 +20,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshLinksBtn = document.getElementById('refresh-links-btn');
     const linksList = document.getElementById('links-list');
+
+    function getPassword() {
+        return localStorage.getItem('swoosh_password') || '';
+    }
+
+    function headers() {
+        const h = { 'Content-Type': 'application/json' };
+        const pw = getPassword();
+        if (pw) h['X-Access-Password'] = pw;
+        return h;
+    }
+
+    function showApp() {
+        passwordCard.classList.add('hidden');
+        appCard.classList.remove('hidden');
+        loadLinks();
+    }
+
+    function showPasswordError(msg) {
+        passwordError.textContent = msg;
+        passwordError.classList.remove('hidden');
+    }
+
+    passwordBtn.addEventListener('click', async () => {
+        const pw = passwordInput.value.trim();
+        if (!pw) return showPasswordError('Please enter a password');
+
+        const r = await fetch('/api/health', { method: 'GET' });
+        if (!r.ok) return showPasswordError('Server error');
+
+        localStorage.setItem('swoosh_password', pw);
+        passwordError.classList.add('hidden');
+        showApp();
+    });
+
+    passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') passwordBtn.click();
+    });
+
+    if (getPassword()) showApp();
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -36,13 +82,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const response = await fetch('/api/shorten', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers(),
                 body: JSON.stringify(payload)
             });
 
             const data = await response.json();
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('swoosh_password');
+                    location.reload();
+                    return;
+                }
                 throw new Error(data.detail || data.error?.message || 'Failed to shorten URL');
             }
 
@@ -52,11 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
             shortLinkUrl.textContent = fullShortUrl;
 
             const resultText = resultSection.querySelector('p');
-            if (data.already_exists) {
-                resultText.textContent = 'This URL was already shortened!';
-            } else {
-                resultText.textContent = 'Your short link is ready!';
-            }
+            resultText.textContent = data.already_exists
+                ? 'This URL was already shortened!'
+                : 'Your short link is ready!';
 
             form.classList.add('hidden');
             resultSection.classList.remove('hidden');
@@ -77,9 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.clipboard.writeText(shortLinkUrl.href).then(() => {
             const originalIcon = copyBtn.textContent;
             copyBtn.textContent = '✅';
-            setTimeout(() => {
-                copyBtn.textContent = originalIcon;
-            }, 2000);
+            setTimeout(() => copyBtn.textContent = originalIcon, 2000);
         });
     });
 
@@ -131,15 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function deleteLink(code) {
         if (!confirm(`Delete short link "${code}"?`)) return;
 
-        fetch(`/api/links/${code}`, { method: 'DELETE' })
+        fetch(`/api/links/${code}`, {
+            method: 'DELETE',
+            headers: headers()
+        })
             .then(r => {
-                if (!r.ok) throw new Error('Failed to delete');
+                if (!r.ok) {
+                    if (r.status === 401) {
+                        localStorage.removeItem('swoosh_password');
+                        location.reload();
+                        return;
+                    }
+                    throw new Error('Failed to delete');
+                }
                 loadLinks();
             })
             .catch(err => alert(err.message));
     }
 
     refreshLinksBtn.addEventListener('click', loadLinks);
-
-    loadLinks();
 });

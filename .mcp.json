@@ -7,6 +7,15 @@
         "--db-path",
         "shortener.db"
       ]
+    },
+    "render": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://mcp.render.com/mcp",
+        "--header",
+        "Authorization: Bearer rnd_T1AYdWHqDUbHJSfUj5jJN95X3ZQ4"
+      ]
     }
   }
 }

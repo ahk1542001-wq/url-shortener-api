@@ -337,6 +337,24 @@ footer {
     font-size: 0.8rem;
 }
 
+#password-card {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+#password-card .input-group {
+    margin-bottom: 1.5rem;
+}
+
+#password-card input {
+    text-align: center;
+}
+
+#password-error {
+    margin-top: 1rem;
+}
+
 .my-links-card {
     margin-top: 1.5rem;
 }

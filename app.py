@@ -54,6 +54,20 @@ async def security_headers(request: Request, call_next):
     return response
 
 
+@app.middleware("http")
+async def password_guard(request: Request, call_next):
+    if config.ACCESS_PASSWORD and request.method in ("POST", "DELETE"):
+        auth = request.headers.get("X-Access-Password", "")
+        if auth != config.ACCESS_PASSWORD:
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": {"code": 401, "message": "Invalid or missing password"}
+                },
+            )
+    return await call_next(request)
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(

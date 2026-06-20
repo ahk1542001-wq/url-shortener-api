@@ -8,3 +8,5 @@ services:
         sync: false
       - key: RATE_LIMIT
         value: 30/minute
+      - key: ACCESS_PASSWORD
+        value: testing12345

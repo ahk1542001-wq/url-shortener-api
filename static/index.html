@@ -20,7 +20,18 @@
         </header>
 
         <main>
-            <div class="glass-card">
+            <div class="glass-card" id="password-card">
+                <div class="input-group">
+                    <label for="password">Access Password</label>
+                    <input type="password" id="password" placeholder="Enter password to continue">
+                </div>
+                <button type="button" id="password-btn">
+                    <span>Continue</span>
+                </button>
+                <div id="password-error" class="error hidden"></div>
+            </div>
+
+            <div class="glass-card hidden" id="app-card">
                 <form id="shorten-form">
                     <div class="input-group">
                         <label for="url">Original URL</label>
@@ -54,6 +65,8 @@
                 </div>
 
             </div>
+
+            </div> <!-- end app-card -->
 
             <div class="glass-card my-links-card">
                 <div class="my-links-header">
