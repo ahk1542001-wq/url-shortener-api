@@ -9,3 +9,5 @@ services:
         sync: false
       - key: RATE_LIMIT
         value: 30/minute
+      - key: PYTHON_VERSION
+        value: 3.11.10
