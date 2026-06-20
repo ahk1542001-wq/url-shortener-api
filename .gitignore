@@ -3,6 +3,5 @@ __pycache__/
 *.pyc
 shortener.db
 .env
-.mcp.json
 .opencode/
 .DS_Store
