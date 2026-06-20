@@ -4,4 +4,5 @@ __pycache__/
 shortener.db
 .env
 .mcp.json
+.opencode/
 .DS_Store

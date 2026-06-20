@@ -48,7 +48,7 @@
 | Security headers | Working |
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
-| Frontend UI | Working (glass-morphism design, scrollable, delete buttons) |
+| Frontend UI | Working (glass-morphism, password gate with show/hide toggle) |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
 | Tests | 19 passing |
 

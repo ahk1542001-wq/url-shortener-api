@@ -69,7 +69,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 - **Backend:** Python 3.11 + FastAPI
 - **Database:** Neon PostgreSQL (free, permanent) — falls back to SQLite for local dev
 - **Hosting:** Render (free tier)
-- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism design
+- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism design, password gate with show/hide toggle
 - **Testing:** pytest (19 tests passing)
 - **Linting:** Ruff
 - **MCP:** mcp-server-sqlite for live database inspection during development

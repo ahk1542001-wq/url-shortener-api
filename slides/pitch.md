@@ -23,6 +23,7 @@ Developed using spec-driven workflow and Addy Osmani's agent-skills
 **Solution:** Short, custom, trackable links with a clean glassmorphism UI.
 
 **What makes it production-ready:**
+- Password-protected access (show/hide toggle)
 - Input validation (Pydantic)
 - Rate limiting (30 req/min per IP)
 - Security headers on every response

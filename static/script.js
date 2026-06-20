@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password');
     const passwordBtn = document.getElementById('password-btn');
     const passwordError = document.getElementById('password-error');
+    const togglePassword = document.getElementById('toggle-password');
 
     const form = document.getElementById('shorten-form');
     const urlInput = document.getElementById('url');
@@ -57,6 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     passwordInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') passwordBtn.click();
+    });
+
+    togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        togglePassword.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
+        togglePassword.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
+        togglePassword.title = isPassword ? 'Hide password' : 'Show password';
     });
 
     if (getPassword()) showApp();
