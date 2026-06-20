@@ -176,7 +176,7 @@ DB_NAME=shortener.db
 HOST=0.0.0.0
 PORT=5000
 RATE_LIMIT=30/minute
-ACCESS_PASSWORD=choose-your-own-password
+ACCESS_PASSWORD=choose-a-strong-password
 EOF
 
 # Start the server
@@ -197,9 +197,10 @@ Open http://localhost:5000 — enter your password to start shortening URLs.
 1. Go to [render.com](https://render.com) → sign up with GitHub
 2. **New +** → **Web Service** → connect your fork of this repo
 3. **Start Command:** `uvicorn app:app --host 0.0.0.0 --port $PORT`
-4. **Environment Variables:**
-   - `DATABASE_URL` = your Neon connection string
-   - `RATE_LIMIT` = `30/minute`
+4. **Environment Variables** (set these in the Render dashboard):
+   - `DATABASE_URL` — your Neon connection string
+   - `RATE_LIMIT` — `30/minute`
+   - `ACCESS_PASSWORD` — choose a strong password
 5. Select **Free** → **Deploy**
 
 ## Validation Rules

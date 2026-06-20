@@ -16,7 +16,7 @@ I followed the **agent-skills lifecycle**: Spec → Plan → Build → Review �
 2. **Plan** — Broke the spec into 6 steps with a timeline and checklist.
 3. **Build** — Incrementally implemented: foundation (config, database modules) → refactor app.py → input validation → rate limiting + security headers → tests → docs.
 4. **Review** — Ran a five-axis code review (correctness, readability, architecture, security, performance). Fixed conftest duplication and a crash on missing static files.
-5. **Ship** — Verified all pre-launch checks pass (19 tests, ruff clean, no secrets, structured errors everywhere). Deployed to Render with Neon PostgreSQL (free, permanent database).
+5. **Ship** — Verified all pre-launch checks pass (26 tests, ruff clean, no secrets, structured errors everywhere). Deployed to Render with Neon PostgreSQL (free, permanent database).
 
 **What Claude Code did:** Wrote all the code, ran tests, fixed bugs, applied the agent-skills workflows automatically.
 **What I did:** Drove the decisions — what to build, answered spec questions (rate limits, reserved codes, URL restrictions), approved the plan, reviewed the output.
@@ -42,7 +42,7 @@ An autonomous agent that verifies endpoints against the API contract. It tests P
 | Spec | `SPEC.md` |
 | Plan | `PLAN.md` |
 | Ship report | `SHIP.md` |
-| Tests | `tests/test_shorten.py`, `tests/test_redirect.py`, `tests/test_stats.py` |
+| Tests | `tests/test_shorten.py`, `tests/test_redirect.py`, `tests/test_stats.py`, `tests/test_password.py` |
 | Slides | `slides/pitch.md` |
 
 ## What I'd Do Next

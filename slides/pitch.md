@@ -11,7 +11,7 @@ auto-advance: 20
 **Live:** url-shortener-api-jcbx.onrender.com
 
 Built with FastAPI + Neon PostgreSQL
-Hardened with validation, rate limiting, security headers, 19 tests
+Hardened with validation, rate limiting, security headers, 26 tests
 Developed using spec-driven workflow and Addy Osmani's agent-skills
 
 ---
