@@ -21,11 +21,12 @@
 ### Infrastructure
 - [x] Environment variables documented (`.env.example`)
 - [x] Health check endpoint (`GET /api/health` → `{"status": "ok"}`)
-- [x] SQLite database auto-creates on startup
+- [x] Database auto-creates on startup (SQLite local, Neon PostgreSQL in production)
 - [x] Config loaded from environment with sensible defaults
+- [x] Deployed to Render with Neon PostgreSQL (free, permanent)
 
 ### Documentation
-- [x] README with setup, API docs, env vars, test commands
+- [x] README with setup, API docs, env vars, deploy instructions
 - [x] `.env.example` as template
 - [x] `SPEC.md` with requirements
 - [x] `PLAN.md` with implementation plan
@@ -48,45 +49,30 @@
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
 | Frontend UI | Working (glass-morphism design, scrollable, delete buttons) |
+| PostgreSQL support | Working (Neon free tier, permanent storage) |
 | Tests | 19 passing |
 
-## Known Limitations
+## Deployment
 
-- SQLite only — not suitable for multi-server deployments
-- No authentication — anyone can create/delete links
-- No HTTPS — needs a reverse proxy (nginx/caddy) in front
-- No persistent monitoring — no error tracking or metrics collection
-- Rate limit is per-process (resets on restart)
+**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database)
 
-## How to Deploy
+**Live at:** https://url-shortener-api.onrender.com
 
-```bash
-# 1. Clone the repo
-git clone <repo-url>
-cd url-shortener-api
+### How to Deploy
+1. Create a free Neon database at [neon.tech](https://neon.tech) → copy connection string
+2. Go to [render.com](https.render.com) → New Web Service → connect GitHub repo
+3. Set start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+4. Add env var: `DATABASE_URL` = Neon connection string
+5. Add env var: `RATE_LIMIT` = `30/minute`
+6. Select Free instance → Deploy
 
-# 2. Set up environment
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env for production settings
-
-# 3. Run
-uvicorn app:app --host 0.0.0.0 --port 8000
-
-# 4. Behind a reverse proxy (recommended)
-# Point nginx/caddy to localhost:8000
-# Enable HTTPS at the proxy layer
-```
-
-## Rollback Plan
-
-This is a greenfield deploy — rollback means stopping the server. No database migrations to reverse. The SQLite file is portable and can be backed up before any changes.
+### Rollback
+- Render: redeploy previous commit from dashboard
+- Neon: database is independent of hosting, data persists across deploys
 
 ## Verification After Deploy
 
-1. `curl http://localhost:8000/api/health` → `{"status": "ok"}`
-2. `curl -X POST http://localhost:8000/api/shorten -H "Content-Type: application/json" -d '{"url": "https://example.com"}'` → 201 with short code
-3. `curl -I http://localhost:8000/{code}` → 302 redirect
+1. `curl https://url-shortener-api.onrender.com/api/health` → `{"status": "ok"}`
+2. `curl -X POST https://url-shortener-api.onrender.com/api/shorten -H "Content-Type: application/json" -d '{"url": "https://example.com"}'` → 201
+3. `curl -I https://url-shortener-api.onrender.com/{code}` → 302 redirect
 4. Check security headers in response

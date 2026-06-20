@@ -55,7 +55,7 @@ Built using spec-driven development and Addy Osmani's agent-skills.
 
 # What I'd Do Next
 
+- ~~Deploy to production~~ Done — live on Render + Neon PostgreSQL (free)
 - Add authentication for personal link management
 - Add geographic analytics (clicks by country)
-- Deploy behind nginx/caddy with HTTPS
 - **Thank you!** Check out the GitHub repo ⭐

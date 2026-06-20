@@ -16,7 +16,9 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 import config
-from database import get_db, init_db
+from database import _placeholder, get_db, init_db
+
+P = _placeholder()
 
 RESERVED_CODES = {"api", "admin", "static", "health", "docs", "openapi"}
 
@@ -121,6 +123,14 @@ class AnalyticsResponse(BaseModel):
 # --- Helpers ---
 
 
+def _fmt_dt(val) -> str:
+    if val is None:
+        return "Never"
+    if isinstance(val, datetime):
+        return val.strftime("%Y-%m-%d %H:%M:%S")
+    return str(val)
+
+
 def generate_short_code(length: int = 6) -> str:
     characters = string.ascii_letters + string.digits
     return "".join(random.choice(characters) for _ in range(length))
@@ -141,7 +151,9 @@ def shorten_url(request: Request, req: ShortenRequest) -> ShortenResponse:
         c = conn.cursor()
 
         if not req.custom_code:
-            c.execute("SELECT short_code FROM urls WHERE original_url = ?", (req.url,))
+            c.execute(
+                f"SELECT short_code FROM urls WHERE original_url = {P}", (req.url,)
+            )
             existing = c.fetchone()
             if existing:
                 return ShortenResponse(
@@ -151,19 +163,19 @@ def shorten_url(request: Request, req: ShortenRequest) -> ShortenResponse:
                 )
             while True:
                 short_code = generate_short_code()
-                c.execute("SELECT id FROM urls WHERE short_code = ?", (short_code,))
+                c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (short_code,))
                 if not c.fetchone():
                     break
         else:
             short_code = req.custom_code
-            c.execute("SELECT id FROM urls WHERE short_code = ?", (short_code,))
+            c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (short_code,))
             if c.fetchone():
                 raise HTTPException(
                     status_code=409, detail="Custom short code already in use"
                 )
 
         c.execute(
-            "INSERT INTO urls (short_code, original_url) VALUES (?, ?)",
+            "INSERT INTO urls (short_code, original_url) VALUES ({0}, {0})".format(P),
             (short_code, req.url),
         )
 
@@ -175,8 +187,8 @@ def get_stats(code: str) -> AnalyticsResponse:
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "SELECT original_url, click_count, created_at, last_accessed "
-            "FROM urls WHERE short_code = ?",
+            f"SELECT original_url, click_count, created_at, last_accessed "
+            f"FROM urls WHERE short_code = {P}",
             (code,),
         )
         result = c.fetchone()
@@ -188,8 +200,8 @@ def get_stats(code: str) -> AnalyticsResponse:
         short_code=code,
         original_url=result[0],
         click_count=result[1],
-        created_at=result[2],
-        last_accessed=result[3] or "Never",
+        created_at=_fmt_dt(result[2]),
+        last_accessed=_fmt_dt(result[3]),
     )
 
 
@@ -209,8 +221,8 @@ def list_links():
                 "short_code": row[0],
                 "original_url": row[1],
                 "click_count": row[2],
-                "created_at": row[3],
-                "last_accessed": row[4] or "Never",
+                "created_at": _fmt_dt(row[3]),
+                "last_accessed": _fmt_dt(row[4]),
             }
             for row in rows
         ]
@@ -221,10 +233,10 @@ def list_links():
 def delete_link(code: str):
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT id FROM urls WHERE short_code = ?", (code,))
+        c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (code,))
         if not c.fetchone():
             raise HTTPException(status_code=404, detail="Short code not found")
-        c.execute("DELETE FROM urls WHERE short_code = ?", (code,))
+        c.execute(f"DELETE FROM urls WHERE short_code = {P}", (code,))
     return {"message": f"Deleted {code}"}
 
 
@@ -232,17 +244,17 @@ def delete_link(code: str):
 def redirect_url(code: str) -> RedirectResponse:
     with get_db() as conn:
         c = conn.cursor()
-        c.execute("SELECT original_url FROM urls WHERE short_code = ?", (code,))
+        c.execute(f"SELECT original_url FROM urls WHERE short_code = {P}", (code,))
         result = c.fetchone()
 
         if not result:
             raise HTTPException(status_code=404, detail="Short code not found")
 
         original_url = result[0]
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now(timezone.utc)
         c.execute(
-            "UPDATE urls SET click_count = click_count + 1, last_accessed = ? "
-            "WHERE short_code = ?",
+            f"UPDATE urls SET click_count = click_count + 1, last_accessed = {P} "
+            f"WHERE short_code = {P}",
             (now, code),
         )
 
