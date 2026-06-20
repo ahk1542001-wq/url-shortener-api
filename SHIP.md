@@ -3,7 +3,7 @@
 ## Pre-Launch Checklist
 
 ### Code Quality
-- [x] All tests pass (19/19)
+- [x] All tests pass (26/26)
 - [x] Lint passes (`ruff check .`)
 - [x] Format passes (`ruff format --check .`)
 - [x] No TODO/FIXME comments
@@ -15,8 +15,9 @@
 - [x] Input validation on all endpoints (Pydantic validators)
 - [x] Security headers configured (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`)
 - [x] Rate limiting on POST /api/shorten (30 req/min per IP)
+- [x] Password protection on POST/DELETE/GET /api/links
 - [x] Structured error responses (no internal details leaked)
-- [x] `.env` and `shortener.db` in `.gitignore`
+- [x] `.env`, `.mcp.json`, and `shortener.db` in `.gitignore`
 
 ### Infrastructure
 - [x] Environment variables documented (`.env.example`)
@@ -30,6 +31,8 @@
 - [x] `.env.example` as template
 - [x] `SPEC.md` with requirements
 - [x] `PLAN.md` with implementation plan
+- [x] `slides/pitch.md` — 6 Marp slides, 20s auto-advance
+- [x] `report.md` — all fields filled
 
 ## What's In This Ship
 
@@ -48,23 +51,26 @@
 | Security headers | Working |
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
-| Frontend UI | Working (glass-morphism, password gate with eye toggle, logout, links hidden until login) |
+| Password protection | Working (login gate, eye toggle, logout button) |
+| Link history | Hidden until login |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
-| Tests | 19 passing |
+| Tests | 26 passing |
 
 ## Deployment
 
 **Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database)
 
-**Live at:** https://url-shortener-api.onrender.com
+**Live at:** https://url-shortener-api-jcbx.onrender.com
 
 ### How to Deploy
 1. Create a free Neon database at [neon.tech](https://neon.tech) → copy connection string
-2. Go to [render.com](https.render.com) → New Web Service → connect GitHub repo
+2. Go to [render.com](https://render.com) → New Web Service → connect GitHub repo
 3. Set start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-4. Add env var: `DATABASE_URL` = Neon connection string
-5. Add env var: `RATE_LIMIT` = `30/minute`
-6. Select Free instance → Deploy
+4. Add env vars in Render dashboard:
+   - `DATABASE_URL` = Neon connection string
+   - `RATE_LIMIT` = `30/minute`
+   - `ACCESS_PASSWORD` = choose a strong password
+5. Select Free instance → Deploy
 
 ### Rollback
 - Render: redeploy previous commit from dashboard
@@ -72,7 +78,8 @@
 
 ## Verification After Deploy
 
-1. `curl https://url-shortener-api.onrender.com/api/health` → `{"status": "ok"}`
-2. `curl -X POST https://url-shortener-api.onrender.com/api/shorten -H "Content-Type: application/json" -d '{"url": "https://example.com"}'` → 201
-3. `curl -I https://url-shortener-api.onrender.com/{code}` → 302 redirect
-4. Check security headers in response
+1. `curl https://url-shortener-api-jcbx.onrender.com/api/health` → `{"status": "ok"}`
+2. Open in browser → password screen appears
+3. Enter password → shorten form + My Links visible
+4. Shorten a URL → short code returned
+5. Click logout → back to password screen

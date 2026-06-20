@@ -1,21 +1,22 @@
-# Spec: Harden URL Shortener API to Production Quality
+# Spec: Swoosh URL Shortener — Production-Hardened
 
 ## Objective
 
-Take the existing "Swoosh" URL shortener MVP (FastAPI + SQLite + vanilla frontend) and harden it for production use. The app works — we're adding the safety nets, validation, tests, and operational maturity that separate a demo from something you'd deploy.
+A self-hosted URL shortener API that turns long URLs into short, trackable links. Password-protected to prevent public abuse. Deployed on Render with Neon PostgreSQL for permanent free storage.
 
-**User:** Anyone wanting a self-hosted URL shortener.
-**Success looks like:** The API handles bad input gracefully, resists abuse, has test coverage, and can be deployed with confidence.
+**User:** Anyone wanting a private, self-hosted URL shortener.
+**Success:** The API handles bad input, resists abuse, requires a password for write operations, and runs in production for free.
 
 ## Tech Stack
 
-- **Runtime:** Python 3.11+
-- **Framework:** FastAPI 0.115.0 + Uvicorn 0.30.6
-- **Database:** SQLite (via `sqlite3` stdlib — no ORM needed at this scale)
-- **Validation:** Pydantic 2.9.2
-- **Testing:** `pytest` + `pytest-asyncio` + `httpx` (TestClient for FastAPI)
-- **Rate limiting:** `slowapi` (Leaky Bucket algorithm)
-- **Environment:** `python-dotenv` for `.env` loading
+- **Runtime:** Python 3.11
+- **Framework:** FastAPI + Uvicorn
+- **Database:** Neon PostgreSQL (production) / SQLite (local dev)
+- **Validation:** Pydantic
+- **Testing:** pytest (26 tests)
+- **Rate limiting:** slowapi (30 req/min per IP)
+- **Hosting:** Render (free tier)
+- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism UI
 
 ## Commands
 
@@ -26,109 +27,48 @@ Lint:    ruff check . && ruff format --check .
 Format:  ruff format .
 ```
 
-## Project Structure
+## Features
 
-```
-url-shortener-api/
-├── app.py                  → Main FastAPI application
-├── config.py               → Settings from environment variables
-├── database.py             → SQLite connection management
-├── models.py               → Pydantic request/response models
-├── routes/
-│   ├── __init__.py
-│   ├── shorten.py          → POST /api/shorten
-│   ├── redirect.py         → GET /{code}
-│   └── stats.py            → GET /api/stats/{code}
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py         → Fixtures (test client, temp DB)
-│   ├── test_shorten.py     → Shorten endpoint tests
-│   ├── test_redirect.py    → Redirect endpoint tests
-│   └── test_stats.py       → Stats endpoint tests
-├── static/                 → Frontend (existing, unchanged)
-├── requirements.txt        → Dependencies (updated)
-├── .env.example            → Template for environment config
-└── SPEC.md                 → This file
-```
+| Feature | Description |
+|---------|-------------|
+| Shorten URLs | POST /api/shorten → returns 6-char code |
+| Custom codes | Optional, 3-20 chars, alphanumeric + hyphens |
+| Redirect | GET /{code} → 302 redirect + click tracking |
+| Link listing | GET /api/links (password protected) |
+| Delete links | DELETE /api/links/{code} (password protected) |
+| Deduplication | Same URL returns same code |
+| Rate limiting | 30 req/min per IP on POST /api/shorten |
+| Password protection | POST/DELETE/GET /api/links require X-Access-Password header |
+| Security headers | X-Content-Type-Options, X-Frame-Options, X-XSS-Protection |
+| Health check | GET /api/health → {"status": "ok"} |
 
-## Code Style
+## Validation Rules
 
-- **Formatter/Linter:** Ruff (replaces Black + isort + flake8)
-- **Line length:** 88 chars (Ruff default)
-- **Imports:** Sorted by Ruff, stdlib → third-party → local
-- **Naming:** `snake_case` for functions/variables, `PascalCase` for classes
-- **Type hints:** Required on all function signatures
+| Field | Rule |
+|-------|------|
+| `url` | Must start with `http://` or `https://`, max 2048 chars |
+| `custom_code` | 3-20 chars, letters/numbers/hyphens only, not a reserved word |
 
-```python
-# Good: typed, descriptive, single responsibility
-def generate_short_code(length: int = 6) -> str:
-    characters = string.ascii_letters + string.digits
-    return "".join(random.choice(characters) for _ in range(length))
-```
+**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`
+
+## Security
+
+- **Password protection** — POST/DELETE/GET /api/links require `X-Access-Password` header
+- **Rate limiting** — 30 req/min per IP on POST /api/shorten
+- **Input validation** — Pydantic validators on all inputs
+- **Parameterized SQL** — no injection vulnerabilities
+- **Security headers** — on every response
+- **No secrets in code** — all secrets in env vars, `.gitignore` covers `.env`, `.mcp.json`
 
 ## Testing Strategy
 
-- **Framework:** pytest + httpx AsyncClient
-- **Test DB:** In-memory SQLite (`:memory:`) per test session — no file cleanup needed
-- **Coverage target:** 90%+ on routes (aim for 100% on business logic)
-- **Test levels:**
-  - Unit: `generate_short_code`, validation logic
-  - Integration: Each API endpoint via httpx
-  - Edge cases: Empty input, duplicate codes, long URLs, special characters
-
-**Test naming:** `test_<what>_<condition>_<expected>`
-
-```python
-def test_shorten_valid_url_returns_201():
-    ...
-
-def test_shorten_missing_scheme_returns_422():
-    ...
-
-def test_redirect_unknown_code_returns_404():
-    ...
-```
+- **Framework:** pytest + httpx
+- **Test DB:** In-memory SQLite per test (no file cleanup needed)
+- **Coverage:** 26 tests covering shorten, redirect, stats, password protection
+- **Naming:** `test_<what>_<condition>_<expected>`
 
 ## Boundaries
 
-- **Always:** Run `pytest` before committing, validate all inputs via Pydantic, use parameterized SQL queries, handle DB connections with context managers
-- **Ask first:** Changing the DB schema, adding new endpoints, modifying rate limit thresholds, switching from SQLite
-- **Never do:** Commit `.env` or `shortener.db`, use f-strings in SQL, store secrets in code, disable CSRF protection on the frontend
-
-## What's Being Fixed (Gap Analysis)
-
-| Area | Current State | Target State |
-|------|--------------|-------------|
-| **URL Validation** | `startswith("http")` check | Pydantic `HttpUrl` + scheme validation |
-| **Custom Code Validation** | No length/char limits | 3-20 chars, alphanumeric + hyphens only |
-| **Rate Limiting** | None | 30 req/min per IP on `/api/shorten` |
-| **Error Responses** | Raw HTTPException | Structured `{"error": {"code": "...", "message": "..."}}` |
-| **DB Connections** | Open/close per request | Context manager with proper cleanup |
-| **Config** | Hardcoded values | `.env`-driven via `config.py` |
-| **Tests** | None | pytest suite with 90%+ route coverage |
-| **Health Check** | None | `GET /api/health` returns `{"status": "ok"}` |
-| **Security Headers** | None | `X-Content-Type-Options`, `X-Frame-Options` via middleware |
-| **Logging** | None | Structured logging for errors and slow requests |
-| **FastAPI Startup** | Deprecated `@app.on_event` | Modern `lifespan` context manager |
-| **README** | One-liner | Usage docs, API reference, env config |
-
-## Success Criteria
-
-- [ ] `pytest -v` passes with 90%+ coverage on routes
-- [ ] `POST /api/shorten` rejects: missing scheme, empty URL, codes < 3 or > 20 chars, non-alphanumeric codes
-- [ ] `POST /api/shorten` returns 429 after 30 requests from same IP in 1 minute
-- [ ] `GET /{code}` returns 302 for valid codes, 404 for unknown
-- [ ] `GET /api/stats/{code}` returns structured analytics or 404
-- [ ] `GET /api/health` returns `{"status": "ok"}`
-- [ ] All errors return structured JSON `{"error": {"code": "...", "message": "..."}}`
-- [ ] DB connections are managed via context managers (no leaked connections)
-- [ ] Config is loaded from `.env` (with `.env.example` as template)
-- [ ] `ruff check . && ruff format --check .` passes clean
-- [ ] README documents setup, usage, and API endpoints
-
-## Decisions (Resolved)
-
-1. **Rate limits:** 30 req/min per IP on `POST /api/shorten` only. Redirects and stats are unthrottled (read-only).
-2. **Reserved codes:** Block `api`, `admin`, `static`, `health` and any other codes that conflict with routes.
-3. **URL restrictions:** None — accept any valid HTTP/HTTPS URL. Keep it simple.
-4. **Migrations:** `ALTER TABLE` is fine for SQLite. No migration tool needed.
+- **Always:** Run `pytest` before committing, validate all inputs, use parameterized SQL, handle DB connections with context managers
+- **Ask first:** Changing the DB schema, adding new endpoints, modifying rate limits
+- **Never do:** Commit secrets, use f-strings in SQL, store passwords in code

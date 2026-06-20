@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-19%20passing-brightgreen?style=for-the-badge)
+![Tests](https://img.shields.io/badge/Tests-26%20passing-brightgreen?style=for-the-badge)
 ![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
 > **Like bit.ly, but you own it.** A self-hosted URL shortener with click tracking, rate limiting, and a glassmorphism UI.
@@ -55,7 +55,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
   │  Get a short link                                        │
   │  https://url-shortener-api-jcbx.onrender.com/aB3xYz      │
   │                                                          │
-  │  [Copy]  [View Analytics]                                │
+  │  [Copy]                                                  │
   └────────────────────────┬────────────────────────────────┘
                            │
                            ▼
@@ -71,7 +71,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 - **Database:** Neon PostgreSQL (free, permanent) — falls back to SQLite for local dev
 - **Hosting:** Render (free tier)
 - **Frontend:** Vanilla HTML/CSS/JS with glassmorphism, password gate (eye toggle), logout button, links hidden until login
-- **Testing:** pytest (19 tests passing)
+- **Testing:** pytest (26 tests passing)
 - **Linting:** Ruff
 - **MCP:** mcp-server-sqlite for live database inspection during development
 - **Agent Skills:** Addy Osmani's agent-skills for spec-driven development workflow
@@ -117,6 +117,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 ```bash
 curl -X POST https://url-shortener-api-jcbx.onrender.com/api/shorten \
   -H "Content-Type: application/json" \
+  -H "X-Access-Password: your-password" \
   -d '{"url": "https://example.com/very/long/path"}'
 ```
 
@@ -130,10 +131,11 @@ Response:
 ```bash
 curl -X POST https://url-shortener-api-jcbx.onrender.com/api/shorten \
   -H "Content-Type: application/json" \
+  -H "X-Access-Password: your-password" \
   -d '{"url": "https://example.com", "custom_code": "my-link"}'
 ```
 
-### Visit a short link
+### Visit a short link (no auth needed)
 
 ```
 https://url-shortener-api-jcbx.onrender.com/aB3xYz
@@ -143,16 +145,18 @@ https://url-shortener-api-jcbx.onrender.com/aB3xYz
 ### List all links
 
 ```bash
-curl https://url-shortener-api-jcbx.onrender.com/api/links
+curl https://url-shortener-api-jcbx.onrender.com/api/links \
+  -H "X-Access-Password: your-password"
 ```
 
 ### Delete a link
 
 ```bash
-curl -X DELETE https://url-shortener-api-jcbx.onrender.com/api/links/aB3xYz
+curl -X DELETE https://url-shortener-api-jcbx.onrender.com/api/links/aB3xYz \
+  -H "X-Access-Password: your-password"
 ```
 
-### Health check
+### Health check (no auth needed)
 
 ```bash
 curl https://url-shortener-api-jcbx.onrender.com/api/health
@@ -284,7 +288,8 @@ url-shortener-api/
 │   ├── conftest.py     → Test fixtures
 │   ├── test_shorten.py → Shorten endpoint tests
 │   ├── test_redirect.py → Redirect endpoint tests
-│   └── test_stats.py   → Stats endpoint tests
+│   ├── test_stats.py   → Stats endpoint tests
+│   └── test_password.py → Password protection tests
 ├── static/
 │   ├── index.html      → Frontend UI
 │   ├── script.js       → Frontend logic
