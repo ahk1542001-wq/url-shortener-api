@@ -6,51 +6,56 @@ auto-advance: 20
 ---
 
 # Swoosh URL Shortener
-## Simplifying your long links
+## From MVP to Production-Hardened
 
-A fast, efficient URL shortening API built with Python, FastAPI, and SQLite.
-Features a premium Glassmorphism UI and built-in click analytics.
-Built with Claude Code and Advanced Agent Skills.
+A self-hosted URL shortener built with FastAPI & SQLite.
+Hardened with validation, rate limiting, security headers, and 19 tests.
+Built using spec-driven development and Addy Osmani's agent-skills.
 
 ---
 
 # Why Swoosh?
 
-- **Problem:** Long URLs are difficult to share, look ugly, and hide analytics.
-- **Solution:** A modern web app that converts long URLs into short, trackable codes.
-- **Impact:** Cleaner communication, custom branded links, and actionable data.
+- **Problem:** Long URLs are hard to share and track.
+- **Solution:** Short, custom, trackable links with a clean UI.
+- **Hardening:** Input validation, rate limiting (30/min), security headers, structured errors, deduplication.
 
 ---
 
-# Technologies Used
+# How I Built It
 
-- **Python & FastAPI:** For a high-performance, auto-documented web backend.
-- **SQLite:** A serverless database to persist codes and analytics.
-- **Frontend UI:** Vanilla HTML/CSS/JS with a Glassmorphism aesthetic.
-- **Claude Code MCP:** `mcp-server-sqlite` for seamless database inspection.
-
----
-
-# The Architecture
-
-- `POST /api/shorten`: Accepts long URLs and optional custom codes.
-- `GET /<code>`: Looks up, increments the `click_count`, and redirects.
-- `GET /api/stats/<code>`: Exposes click counts and access times.
-- **Database:** Stores IDs, short codes, original URLs, and timestamps.
+- **Spec → Plan → Build → Test → Review → Ship** (agent-skills lifecycle)
+- Claude Code wrote the code; I drove the decisions.
+- **MCP:** `mcp-server-sqlite` for live DB inspection during development.
+- **Skill:** `url-api-contract` enforced API consistency.
+- **Agent:** `url-tester` autonomously verified endpoints.
 
 ---
 
-# Spec-Driven Development
+# Architecture
 
-- The API design strictly follows the **Contract First** principle.
-- Consistent error formatting using FastAPI's HTTPExceptions.
-- A dedicated Claude Agent (`url-tester`) autonomously verifies these endpoints against the SKILL contract inspired by Addy Osmani's `agent-skills`.
+- `POST /api/shorten` — create short URL (with dedup + rate limit)
+- `GET /<code>` — 302 redirect + click tracking
+- `GET /api/links` — list all saved links
+- `DELETE /api/links/<code>` — remove a link
+- `GET /api/health` — health check
+- **SQLite** via context managers, `.env`-driven config
 
 ---
 
-# Future Improvements
+# What Got Hardened
 
-- Add user authentication for managing personal links.
-- Add geographic analytics (e.g., clicks by country).
-- Rate limiting to prevent spam.
-- **Thank you!** Check out the GitHub repo and give it a ⭐!
+- **Validation:** Pydantic `HttpUrl`, 3-20 char codes, reserved word blocking
+- **Rate Limiting:** 30 req/min on POST via `slowapi`
+- **Security Headers:** `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`
+- **Structured Errors:** `{"error": {"code": 422, "message": "..."}}` everywhere
+- **Tests:** 19 passing (shorten, redirect, stats, edge cases)
+
+---
+
+# What I'd Do Next
+
+- Add authentication for personal link management
+- Add geographic analytics (clicks by country)
+- Deploy behind nginx/caddy with HTTPS
+- **Thank you!** Check out the GitHub repo ⭐

@@ -1,24 +1,114 @@
-import sqlite3
-import string
-import random
-from datetime import datetime
-from fastapi import FastAPI, HTTPException, Request, Body
-from fastapi.responses import RedirectResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, HttpUrl
 import os
+import random
+import re
+import string
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Optional
 
-app = FastAPI(title="URL Shortener API")
-DB_NAME = "shortener.db"
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, field_validator
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
-# Pydantic models for validation
+import config
+from database import get_db, init_db
+
+RESERVED_CODES = {"api", "admin", "static", "health", "docs", "openapi"}
+
+limiter = Limiter(key_func=get_remote_address, default_limits=[config.RATE_LIMIT])
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="URL Shortener API", lifespan=lifespan)
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": {"code": 429, "message": "Rate limit exceeded. Try again later."}
+        },
+    )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": {"code": exc.status_code, "message": exc.detail}},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    messages = [
+        f"{' -> '.join(str(p) for p in err['loc'])}: {err['msg']}"
+        for err in exc.errors()
+    ]
+    return JSONResponse(
+        status_code=422,
+        content={"error": {"code": 422, "message": "; ".join(messages)}},
+    )
+
+
+# --- Models ---
+
+
 class ShortenRequest(BaseModel):
     url: str
-    custom_code: str = None
+    custom_code: Optional[str] = None
+
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if len(v) > 2048:
+            raise ValueError("URL must be 2048 characters or fewer")
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
+
+    @field_validator("custom_code")
+    @classmethod
+    def validate_custom_code(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        if len(v) < 3 or len(v) > 20:
+            raise ValueError("Custom code must be 3-20 characters")
+        if not re.match(r"^[a-zA-Z0-9-]+$", v):
+            raise ValueError(
+                "Custom code must contain only letters, numbers, and hyphens"
+            )
+        if v.lower() in RESERVED_CODES:
+            raise ValueError(f"'{v}' is a reserved code and cannot be used")
+        return v
+
 
 class ShortenResponse(BaseModel):
     short_code: str
     original_url: str
+    already_exists: bool = False
+
 
 class AnalyticsResponse(BaseModel):
     short_code: str
@@ -27,67 +117,69 @@ class AnalyticsResponse(BaseModel):
     created_at: str
     last_accessed: str
 
-def init_db():
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS urls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            short_code TEXT UNIQUE NOT NULL,
-            original_url TEXT NOT NULL,
-            click_count INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_accessed DATETIME
-        )
-    ''')
-    conn.commit()
-    conn.close()
 
-def generate_short_code(length=6):
+# --- Helpers ---
+
+
+def generate_short_code(length: int = 6) -> str:
     characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
+    return "".join(random.choice(characters) for _ in range(length))
 
-@app.on_event("startup")
-def startup_event():
-    init_db()
+
+# --- Routes ---
+
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok"}
+
 
 @app.post("/api/shorten", response_model=ShortenResponse, status_code=201)
-def shorten_url(req: ShortenRequest):
-    if not req.url.startswith("http://") and not req.url.startswith("https://"):
-        raise HTTPException(status_code=422, detail="Invalid URL format. Must start with http:// or https://")
-    
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    
-    if req.custom_code:
-        short_code = req.custom_code
-        c.execute('SELECT id FROM urls WHERE short_code = ?', (short_code,))
-        if c.fetchone():
-            conn.close()
-            raise HTTPException(status_code=409, detail="Custom short code already in use")
-    else:
-        while True:
-            short_code = generate_short_code()
-            c.execute('SELECT id FROM urls WHERE short_code = ?', (short_code,))
-            if not c.fetchone():
-                break
+@limiter.limit(config.RATE_LIMIT)
+def shorten_url(request: Request, req: ShortenRequest) -> ShortenResponse:
+    with get_db() as conn:
+        c = conn.cursor()
 
-    c.execute(
-        'INSERT INTO urls (short_code, original_url) VALUES (?, ?)',
-        (short_code, req.url)
-    )
-    conn.commit()
-    conn.close()
+        if not req.custom_code:
+            c.execute("SELECT short_code FROM urls WHERE original_url = ?", (req.url,))
+            existing = c.fetchone()
+            if existing:
+                return ShortenResponse(
+                    short_code=existing[0],
+                    original_url=req.url,
+                    already_exists=True,
+                )
+            while True:
+                short_code = generate_short_code()
+                c.execute("SELECT id FROM urls WHERE short_code = ?", (short_code,))
+                if not c.fetchone():
+                    break
+        else:
+            short_code = req.custom_code
+            c.execute("SELECT id FROM urls WHERE short_code = ?", (short_code,))
+            if c.fetchone():
+                raise HTTPException(
+                    status_code=409, detail="Custom short code already in use"
+                )
+
+        c.execute(
+            "INSERT INTO urls (short_code, original_url) VALUES (?, ?)",
+            (short_code, req.url),
+        )
 
     return ShortenResponse(short_code=short_code, original_url=req.url)
 
+
 @app.get("/api/stats/{code}", response_model=AnalyticsResponse)
-def get_stats(code: str):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('SELECT original_url, click_count, created_at, last_accessed FROM urls WHERE short_code = ?', (code,))
-    result = c.fetchone()
-    conn.close()
+def get_stats(code: str) -> AnalyticsResponse:
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "SELECT original_url, click_count, created_at, last_accessed "
+            "FROM urls WHERE short_code = ?",
+            (code,),
+        )
+        result = c.fetchone()
 
     if not result:
         raise HTTPException(status_code=404, detail="Short code not found")
@@ -97,36 +189,83 @@ def get_stats(code: str):
         original_url=result[0],
         click_count=result[1],
         created_at=result[2],
-        last_accessed=result[3] if result[3] else "Never"
+        last_accessed=result[3] or "Never",
     )
 
+
+@app.get("/api/links")
+def list_links():
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(
+            "SELECT short_code, original_url, click_count, created_at, last_accessed "
+            "FROM urls ORDER BY created_at DESC"
+        )
+        rows = c.fetchall()
+
+    return {
+        "links": [
+            {
+                "short_code": row[0],
+                "original_url": row[1],
+                "click_count": row[2],
+                "created_at": row[3],
+                "last_accessed": row[4] or "Never",
+            }
+            for row in rows
+        ]
+    }
+
+
+@app.delete("/api/links/{code}")
+def delete_link(code: str):
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT id FROM urls WHERE short_code = ?", (code,))
+        if not c.fetchone():
+            raise HTTPException(status_code=404, detail="Short code not found")
+        c.execute("DELETE FROM urls WHERE short_code = ?", (code,))
+    return {"message": f"Deleted {code}"}
+
+
 @app.get("/{code}")
-def redirect_url(code: str):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute('SELECT id, original_url FROM urls WHERE short_code = ?', (code,))
-    result = c.fetchone()
-    
-    if not result:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Short code not found")
-        
-    db_id, original_url = result
-    now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('UPDATE urls SET click_count = click_count + 1, last_accessed = ? WHERE id = ?', (now, db_id))
-    conn.commit()
-    conn.close()
+def redirect_url(code: str) -> RedirectResponse:
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute("SELECT original_url FROM urls WHERE short_code = ?", (code,))
+        result = c.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Short code not found")
+
+        original_url = result[0]
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        c.execute(
+            "UPDATE urls SET click_count = click_count + 1, last_accessed = ? "
+            "WHERE short_code = ?",
+            (now, code),
+        )
 
     return RedirectResponse(url=original_url, status_code=302)
 
-# Serve static files for frontend UI
+
+# --- Static files ---
+
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.get("/")
 def serve_frontend():
+    if not os.path.isfile("static/index.html"):
+        return JSONResponse(
+            status_code=404,
+            content={"error": {"code": 404, "message": "Frontend not found"}},
+        )
     return FileResponse("static/index.html")
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+
+    uvicorn.run(app, host=config.HOST, port=config.PORT)

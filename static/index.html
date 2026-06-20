@@ -50,24 +50,18 @@
                         <a href="#" id="short-link-url" target="_blank"></a>
                         <button id="copy-btn" title="Copy to clipboard">📋</button>
                     </div>
-                    <div class="stats-link-wrapper">
-                        <a href="#" id="stats-link" class="stats-link">View Analytics →</a>
-                    </div>
+                    <button id="new-link-btn" class="secondary-btn">Shorten Another</button>
                 </div>
 
-                <div id="stats-section" class="stats hidden">
-                    <h3>Analytics</h3>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <span class="stat-value" id="stat-clicks">0</span>
-                            <span class="stat-label">Total Clicks</span>
-                        </div>
-                        <div class="stat-box">
-                            <span class="stat-value text-sm" id="stat-last-accessed">Never</span>
-                            <span class="stat-label">Last Accessed</span>
-                        </div>
-                    </div>
-                    <button id="close-stats-btn" class="secondary-btn">Close</button>
+            </div>
+
+            <div class="glass-card my-links-card">
+                <div class="my-links-header">
+                    <h3>My Links</h3>
+                    <button id="refresh-links-btn" class="icon-btn" title="Refresh">🔄</button>
+                </div>
+                <div id="links-list" class="links-list">
+                    <p class="text-muted">Loading...</p>
                 </div>
             </div>
         </main>
