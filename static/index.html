@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swoosh | URL Shortener</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>Swoosh</h1>
+            <p>Make your links magically short</p>
+        </header>
+
+        <main>
+            <div class="glass-card">
+                <form id="shorten-form">
+                    <div class="input-group">
+                        <label for="url">Original URL</label>
+                        <input type="url" id="url" placeholder="https://example.com/very/long/path" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="custom_code">Custom Code (Optional)</label>
+                        <div class="input-prefix-wrapper">
+                            <span class="prefix">swoo.sh/</span>
+                            <input type="text" id="custom_code" placeholder="my-event">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submit-btn">
+                        <span>Shorten URL</span>
+                        <div class="loader" id="btn-loader"></div>
+                    </button>
+                </form>
+
+                <div id="error-message" class="error hidden"></div>
+
+                <div id="result-section" class="result hidden">
+                    <div class="success-icon">✨</div>
+                    <p>Your short link is ready!</p>
+                    <div class="short-link-box">
+                        <a href="#" id="short-link-url" target="_blank"></a>
+                        <button id="copy-btn" title="Copy to clipboard">📋</button>
+                    </div>
+                    <div class="stats-link-wrapper">
+                        <a href="#" id="stats-link" class="stats-link">View Analytics →</a>
+                    </div>
+                </div>
+
+                <div id="stats-section" class="stats hidden">
+                    <h3>Analytics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value" id="stat-clicks">0</span>
+                            <span class="stat-label">Total Clicks</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value text-sm" id="stat-last-accessed">Never</span>
+                            <span class="stat-label">Last Accessed</span>
+                        </div>
+                    </div>
+                    <button id="close-stats-btn" class="secondary-btn">Close</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Built with FastAPI & Claude Code</p>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
