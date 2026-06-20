@@ -1,13 +1,10 @@
 services:
   - type: web
     name: swoosh-url-shortener
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    runtime: docker
+    dockerfilePath: Dockerfile
     envVars:
       - key: DATABASE_URL
         sync: false
       - key: RATE_LIMIT
         value: 30/minute
-      - key: PYTHON_VERSION
-        value: 3.11.10
