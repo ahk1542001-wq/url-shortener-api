@@ -56,15 +56,24 @@ async def security_headers(request: Request, call_next):
 
 @app.middleware("http")
 async def password_guard(request: Request, call_next):
-    if config.ACCESS_PASSWORD and request.method in ("POST", "DELETE"):
-        auth = request.headers.get("X-Access-Password", "")
-        if auth != config.ACCESS_PASSWORD:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    "error": {"code": 401, "message": "Invalid or missing password"}
-                },
-            )
+    if config.ACCESS_PASSWORD:
+        needs_auth = False
+        if request.method in ("POST", "DELETE"):
+            needs_auth = True
+        elif request.method == "GET" and request.url.path == "/api/links":
+            needs_auth = True
+        if needs_auth:
+            auth = request.headers.get("X-Access-Password", "")
+            if auth != config.ACCESS_PASSWORD:
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "error": {
+                            "code": 401,
+                            "message": "Invalid or missing password",
+                        }
+                    },
+                )
     return await call_next(request)
 
 

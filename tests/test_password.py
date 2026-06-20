@@ -31,10 +31,10 @@ def test_delete_without_password_when_set(client, monkeypatch):
     assert r.status_code == 401
 
 
-def test_get_links_not_protected(client, monkeypatch):
+def test_get_links_protected(client, monkeypatch):
     monkeypatch.setattr("config.ACCESS_PASSWORD", "secret123")
     r = client.get("/api/links")
-    assert r.status_code == 200
+    assert r.status_code == 401
 
 
 def test_redirect_not_protected(client, monkeypatch):
