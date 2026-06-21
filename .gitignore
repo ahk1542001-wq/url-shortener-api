@@ -6,3 +6,4 @@ shortener.db
 .mcp.json
 .opencode/
 .DS_Store
+venv/
