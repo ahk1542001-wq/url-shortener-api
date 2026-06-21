@@ -12,7 +12,7 @@
       "command": "sh",
       "args": [
         "-c",
-        "npx -y @modelcontextprotocol/server-remote https://mcp.render.com/mcp --header \"Authorization: Bearer $RENDER_API_KEY\""
+        "source .env && npx -y @modelcontextprotocol/server-remote https://mcp.render.com/mcp --header \"Authorization: Bearer $RENDER_API_KEY\""
       ]
     }
   }
