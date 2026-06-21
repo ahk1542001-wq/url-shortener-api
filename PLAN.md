@@ -9,7 +9,8 @@
 5. **Password protection** — Add `ACCESS_PASSWORD` env var, middleware to protect POST/DELETE/GET /api/links, frontend login gate with eye toggle, logout button.
 6. **PostgreSQL support** — Add `DATABASE_URL` env var, dynamic placeholders for SQLite/PostgreSQL, `_fmt_dt()` helper for datetime formatting.
 7. **Tests** — `tests/conftest.py` with in-memory SQLite fixtures. Test files for shorten, redirect, stats, password protection (26 tests).
-8. **Docs** — README, SPEC, PLAN, SHIP, report.md, Marp slides (6 slides, 20s auto-advance).
+8. **Copy button** — Add copy button (📋) next to delete in My Links. Copies full short URL to clipboard, shows ✅ for 2 seconds.
+9. **Docs** — README, SPEC, PLAN, SHIP, report.md, Marp slides (6 slides, 20s auto-advance).
 
 ## What "Good" Looks Like
 

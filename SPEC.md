@@ -35,6 +35,7 @@ Format:  ruff format .
 | Custom codes | Optional, 3-20 chars, alphanumeric + hyphens |
 | Redirect | GET /{code} → 302 redirect + click tracking |
 | Link listing | GET /api/links (password protected) |
+| Copy short URLs | One-click copy button in My Links with ✅ feedback |
 | Delete links | DELETE /api/links/{code} (password protected) |
 | Deduplication | Same URL returns same code |
 | Rate limiting | 30 req/min per IP on POST /api/shorten |

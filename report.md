@@ -6,7 +6,7 @@
 
 ## What It Does
 
-Swoosh is a self-hosted URL shortener API built with FastAPI. Users enter a password to access the app, paste a long URL, and get a short code back. Visiting that short code redirects to the original URL while tracking click counts. The project was hardened from an MVP to production quality using spec-driven development — adding input validation, rate limiting (30 req/min), security headers, structured error responses, deduplication (same URL returns same code), link listing, deletion, and password protection with a show/hide toggle. It supports both SQLite (local dev) and Neon PostgreSQL (free, permanent hosting). A glassmorphism frontend lets users shorten links, copy them, and manage their saved links behind a password gate. Link history is hidden until the user logs in, and a logout button clears the session.
+Swoosh is a self-hosted URL shortener API built with FastAPI. Users enter a password to access the app, paste a long URL, and get a short code back. Visiting that short code redirects to the original URL while tracking click counts. The project was hardened from an MVP to production quality using spec-driven development — adding input validation, rate limiting (30 req/min), security headers, structured error responses, deduplication (same URL returns same code), link listing, deletion, and password protection with a show/hide toggle. It supports both SQLite (local dev) and Neon PostgreSQL (free, permanent hosting). A glassmorphism frontend lets users shorten links, copy them (one-click copy with ✅ feedback), and manage their saved links behind a password gate. Link history is hidden until the user logs in, and a logout button clears the session.
 
 ## How I Built It
 

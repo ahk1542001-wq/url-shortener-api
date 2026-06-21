@@ -8,7 +8,7 @@
 
 > **Like bit.ly, but you own it.** A self-hosted URL shortener with click tracking, rate limiting, and a glassmorphism UI.
 
-🔗 **Live:** [url-shortener-api-jcbx.onrender.com](https://url-shortener-api-jcbx.onrender.com)
+🔗 **Live:** [swoo-sh.onrender.com](https://swoo-sh.onrender.com)
 
 ---
 
@@ -16,7 +16,7 @@
 
 Swoosh is a self-hosted URL shortener — like bit.ly, but you own it. Paste a long URL, get a short code back. Share the short link anywhere. When someone clicks it, they get redirected to the original URL while Swoosh tracks how many times it was clicked.
 
-**Live demo:** https://url-shortener-api-jcbx.onrender.com
+**Live demo:** https://swoo-sh.onrender.com
 
 ## Why I Built This
 
@@ -33,6 +33,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 | **Redirect** | Visit the short link → 302 redirect to the original URL |
 | **Click tracking** | Every redirect increments a click counter |
 | **Link listing** | See all your shortened links in one place |
+| **Copy short URLs** | One-click copy button in My Links with ✅ feedback |
 | **Delete links** | Remove links you no longer need |
 | **Deduplication** | Shorten the same URL twice → get the same code back |
 | **Rate limiting** | 30 requests per minute per IP to prevent abuse |
@@ -54,7 +55,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
                            ▼
   ┌─────────────────────────────────────────────────────────┐
   │  Get a short link                                        │
-  │  https://url-shortener-api-jcbx.onrender.com/aB3xYz      │
+  │  https://swoo-sh.onrender.com/aB3xYz                      │
   │                                                          │
   │  [Copy]                                                  │
   └────────────────────────┬────────────────────────────────┘
@@ -116,7 +117,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 ### Shorten a URL
 
 ```bash
-curl -X POST https://url-shortener-api-jcbx.onrender.com/api/shorten \
+curl -X POST https://swoo-sh.onrender.com/api/shorten \
   -H "Content-Type: application/json" \
   -H "X-Access-Password: your-password" \
   -d '{"url": "https://example.com/very/long/path"}'
@@ -130,7 +131,7 @@ Response:
 ### Use a custom code
 
 ```bash
-curl -X POST https://url-shortener-api-jcbx.onrender.com/api/shorten \
+curl -X POST https://swoo-sh.onrender.com/api/shorten \
   -H "Content-Type: application/json" \
   -H "X-Access-Password: your-password" \
   -d '{"url": "https://example.com", "custom_code": "my-link"}'
@@ -139,28 +140,28 @@ curl -X POST https://url-shortener-api-jcbx.onrender.com/api/shorten \
 ### Visit a short link (no auth needed)
 
 ```
-https://url-shortener-api-jcbx.onrender.com/aB3xYz
+https://swoo-sh.onrender.com/aB3xYz
 → 302 redirect to https://example.com/very/long/path
 ```
 
 ### List all links
 
 ```bash
-curl https://url-shortener-api-jcbx.onrender.com/api/links \
+curl https://swoo-sh.onrender.com/api/links \
   -H "X-Access-Password: your-password"
 ```
 
 ### Delete a link
 
 ```bash
-curl -X DELETE https://url-shortener-api-jcbx.onrender.com/api/links/aB3xYz \
+curl -X DELETE https://swoo-sh.onrender.com/api/links/aB3xYz \
   -H "X-Access-Password: your-password"
 ```
 
 ### Health check (no auth needed)
 
 ```bash
-curl https://url-shortener-api-jcbx.onrender.com/api/health
+curl https://swoo-sh.onrender.com/api/health
 # {"status": "ok"}
 ```
 

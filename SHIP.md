@@ -55,6 +55,7 @@
 | Password protection | Working (login gate, eye toggle, logout button) |
 | XSS protection | Working (escapeHtml on all user content in innerHTML) |
 | Auth failure handling | Centralized `handle401()` helper across all endpoints |
+| Copy short URLs | One-click copy in My Links with ✅ feedback |
 | Link history | Hidden until login |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
 | Tests | 26 passing |
@@ -63,7 +64,7 @@
 
 **Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database)
 
-**Live at:** https://url-shortener-api-jcbx.onrender.com
+**Live at:** https://swoo-sh.onrender.com
 
 ### How to Deploy
 1. Create a free Neon database at [neon.tech](https://neon.tech) → copy connection string
@@ -81,7 +82,7 @@
 
 ## Verification After Deploy
 
-1. `curl https://url-shortener-api-jcbx.onrender.com/api/health` → `{"status": "ok"}`
+1. `curl https://swoo-sh.onrender.com/api/health` → `{"status": "ok"}`
 2. Open in browser → password screen appears
 3. Enter password → shorten form + My Links visible
 4. Shorten a URL → short code returned
