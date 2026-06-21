@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="link-clicks">${link.click_count}</div>
                             <div class="link-date">${lastAccessed}</div>
                         </div>
+                        <button class="copy-link-btn" data-code="${escapeHtml(link.short_code)}" title="Copy short URL">📋</button>
                         <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">🗑️</button>
                     </div>
                 `;
@@ -207,6 +208,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteLink(btn.dataset.code));
+            });
+
+            document.querySelectorAll('.copy-link-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const fullUrl = `${window.location.origin}/${btn.dataset.code}`;
+                    navigator.clipboard.writeText(fullUrl).then(() => {
+                        const original = btn.textContent;
+                        btn.textContent = '✅';
+                        btn.title = 'Copied!';
+                        setTimeout(() => { btn.textContent = original; btn.title = 'Copy short URL'; }, 2000);
+                    });
+                });
             });
         } catch (err) {
             console.error('loadLinks failed:', err);

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: swoosh-url-shortener
+    name: swoo-sh
     runtime: docker
     dockerfilePath: Dockerfile
     envVars:
