@@ -23,6 +23,7 @@ Define the interface before implementing it. The contract is the spec — implem
 ```python
 # Create Short URL
 POST /api/shorten
+Headers: { "X-Access-Password": "<your-password>" }
 Input: { "url": "https://example.com/very/long/path", "custom_code": "optional-custom" }
 Output: { "short_code": "aB3dE", "original_url": "https://example.com/..." }
 
@@ -36,12 +37,16 @@ Output: { "short_code": "...", "original_url": "...", "click_count": 5, "created
 ```
 
 ### 2. Consistent Error Semantics
-FastAPI handles automatic validation errors (422 Unprocessable Entity). Custom HTTPExceptions return JSON:
+FastAPI handles automatic validation errors (422 Unprocessable Entity) and custom HTTPExceptions, returning a standard JSON envelope:
 ```python
 {
-  "detail": "Custom short code already in use"
+  "error": {
+    "code": 409,
+    "message": "Custom short code already in use"
+  }
 }
 ```
+Auth endpoints return 401 if `X-Access-Password` is missing or invalid. Rate-limited endpoints return 429.
 
 ### 3. Validate at Boundaries
 Validate the provided URL before inserting into the SQLite database. Ensure it is a valid HTTP/HTTPS URL via Pydantic or custom logic.
