@@ -9,12 +9,10 @@
       ]
     },
     "render": {
-      "command": "npx",
+      "command": "sh",
       "args": [
-        "mcp-remote",
-        "https://mcp.render.com/mcp",
-        "--header",
-        "Authorization: Bearer rnd_T1AYdWHqDUbHJSfUj5jJN95X3ZQ4"
+        "-c",
+        "npx -y @modelcontextprotocol/server-remote https://mcp.render.com/mcp --header \"Authorization: Bearer $RENDER_API_KEY\""
       ]
     }
   }
