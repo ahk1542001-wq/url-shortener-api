@@ -35,6 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return h;
     }
 
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function handle401(r) {
+        if (r.status === 401) {
+            localStorage.removeItem('swoosh_password');
+            location.reload();
+            return true;
+        }
+        return false;
+    }
+
     function showApp() {
         passwordCard.classList.add('hidden');
         appCard.classList.remove('hidden');
@@ -52,7 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const pw = passwordInput.value.trim();
         if (!pw) return showPasswordError('Please enter a password');
 
-        const r = await fetch('/api/health', { method: 'GET' });
+        try {
+            const health = await fetch('/api/health');
+            if (!health.ok) return showPasswordError('Server error');
+        } catch {
+            return showPasswordError('Server error');
+        }
+
+        const r = await fetch('/api/links', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'X-Access-Password': pw }
+        });
+        if (r.status === 401) return showPasswordError('Wrong password');
         if (!r.ok) return showPasswordError('Server error');
 
         localStorage.setItem('swoosh_password', pw);
@@ -102,11 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (!response.ok) {
-                if (response.status === 401) {
-                    localStorage.removeItem('swoosh_password');
-                    location.reload();
-                    return;
-                }
+                if (handle401(response)) return;
                 throw new Error(data.detail || data.error?.message || 'Failed to shorten URL');
             }
 
@@ -151,41 +173,45 @@ document.addEventListener('DOMContentLoaded', () => {
         urlInput.focus();
     });
 
-    function loadLinks() {
-        fetch('/api/links')
-            .then(r => r.json())
-            .then(data => {
-                if (!data.links || data.links.length === 0) {
-                    linksList.innerHTML = '<div class="empty-state">No links yet. Shorten a URL above!</div>';
-                    return;
-                }
+    async function loadLinks() {
+        try {
+            const r = await fetch('/api/links', { headers: headers() });
+            if (handle401(r)) return;
+            if (!r.ok) throw new Error('Failed to load links');
 
-                linksList.innerHTML = data.links.map(link => {
-                    const lastAccessed = link.last_accessed === 'Never'
-                        ? 'Never'
-                        : new Date(link.last_accessed + 'Z').toLocaleDateString();
-                    return `
-                        <div class="link-item">
-                            <div class="link-info">
-                                <div class="link-code">${link.short_code}</div>
-                                <div class="link-url">${link.original_url}</div>
-                            </div>
-                            <div class="link-stats">
-                                <div class="link-clicks">${link.click_count}</div>
-                                <div class="link-date">${lastAccessed}</div>
-                            </div>
-                            <button class="delete-btn" data-code="${link.short_code}" title="Delete">🗑️</button>
+            const data = await r.json();
+
+            if (!data.links || data.links.length === 0) {
+                linksList.innerHTML = '<div class="empty-state">No links yet. Shorten a URL above!</div>';
+                return;
+            }
+
+            linksList.innerHTML = data.links.map(link => {
+                const lastAccessed = link.last_accessed === 'Never'
+                    ? 'Never'
+                    : new Date(link.last_accessed + 'Z').toLocaleDateString();
+                return `
+                    <div class="link-item">
+                        <div class="link-info">
+                            <div class="link-code">${escapeHtml(link.short_code)}</div>
+                            <div class="link-url">${escapeHtml(link.original_url)}</div>
                         </div>
-                    `;
-                }).join('');
+                        <div class="link-stats">
+                            <div class="link-clicks">${link.click_count}</div>
+                            <div class="link-date">${lastAccessed}</div>
+                        </div>
+                        <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">🗑️</button>
+                    </div>
+                `;
+            }).join('');
 
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', () => deleteLink(btn.dataset.code));
-                });
-            })
-            .catch(() => {
-                linksList.innerHTML = '<div class="empty-state">Failed to load links</div>';
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteLink(btn.dataset.code));
             });
+        } catch (err) {
+            console.error('loadLinks failed:', err);
+            linksList.innerHTML = '<div class="empty-state">Failed to load links</div>';
+        }
     }
 
     function deleteLink(code) {
@@ -196,14 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: headers()
         })
             .then(r => {
-                if (!r.ok) {
-                    if (r.status === 401) {
-                        localStorage.removeItem('swoosh_password');
-                        location.reload();
-                        return;
-                    }
-                    throw new Error('Failed to delete');
-                }
+                if (handle401(r)) return;
+                if (!r.ok) throw new Error('Failed to delete');
                 loadLinks();
             })
             .catch(err => alert(err.message));
