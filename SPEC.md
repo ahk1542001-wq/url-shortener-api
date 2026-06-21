@@ -54,10 +54,12 @@ Format:  ruff format .
 ## Security
 
 - **Password protection** — POST/DELETE/GET /api/links require `X-Access-Password` header
+- **XSS protection** — all user-supplied content (short codes, URLs) escaped via `escapeHtml()` before DOM insertion
 - **Rate limiting** — 30 req/min per IP on POST /api/shorten
 - **Input validation** — Pydantic validators on all inputs
 - **Parameterized SQL** — no injection vulnerabilities
 - **Security headers** — on every response
+- **Centralized auth handling** — `handle401()` helper used across all authenticated fetch calls
 - **No secrets in code** — all secrets in env vars, `.gitignore` covers `.env`, `.mcp.json`
 
 ## Testing Strategy

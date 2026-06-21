@@ -38,7 +38,8 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
 | **Rate limiting** | 30 requests per minute per IP to prevent abuse |
 | **Security headers** | Every response includes anti-XSS, anti-clickjacking headers |
 | **Input validation** | Rejects bad URLs, short codes with special chars, reserved words |
-| **Password protection** | Password required for POST/DELETE, login gate with show/hide toggle, logout button |
+| **Password protection** | Password required for POST/DELETE/GET /api/links, login gate with show/hide toggle, logout button |
+| **XSS protection** | All user content escaped before DOM insertion (`escapeHtml()`) |
 | **Link history** | My Links section visible only after login |
 | **Health check** | `GET /api/health` returns `{"status": "ok"}` for monitoring |
 
@@ -226,7 +227,7 @@ Open http://localhost:5000 — enter your password to start shortening URLs.
 | `HOST` | `0.0.0.0` | Server bind address |
 | `PORT` | `5000` | Server port |
 | `RATE_LIMIT` | `30/minute` | Rate limit on POST /api/shorten |
-| `ACCESS_PASSWORD` | (required) | Password required for POST/DELETE requests |
+| `ACCESS_PASSWORD` | (required) | Password required for POST/DELETE/GET /api/links requests |
 
 ## Error Responses
 
@@ -248,7 +249,9 @@ All errors return structured JSON:
 - **Input validation** on all endpoints (Pydantic)
 - **Parameterized SQL** — no injection vulnerabilities
 - **Rate limiting** — 30 req/min per IP on POST /api/shorten
-- **Password protection** — POST/DELETE require `X-Access-Password` header
+- **Password protection** — POST/DELETE/GET /api/links require `X-Access-Password` header
+- **XSS protection** — all user-supplied content escaped via `escapeHtml()` before DOM insertion
+- **Centralized auth handling** — `handle401()` helper consolidates auth failure logic across all fetch calls
 - **Security headers** on every response:
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`

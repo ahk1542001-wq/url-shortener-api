@@ -16,6 +16,7 @@
 - [x] Security headers configured (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`)
 - [x] Rate limiting on POST /api/shorten (30 req/min per IP)
 - [x] Password protection on POST/DELETE/GET /api/links
+- [x] XSS protection — all user-supplied content escaped via `escapeHtml()` before DOM insertion
 - [x] Structured error responses (no internal details leaked)
 - [x] `.env`, `.mcp.json`, and `shortener.db` in `.gitignore`
 
@@ -52,6 +53,8 @@
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
 | Password protection | Working (login gate, eye toggle, logout button) |
+| XSS protection | Working (escapeHtml on all user content in innerHTML) |
+| Auth failure handling | Centralized `handle401()` helper across all endpoints |
 | Link history | Hidden until login |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
 | Tests | 26 passing |
