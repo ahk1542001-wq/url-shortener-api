@@ -279,17 +279,23 @@ ruff format --check .
 
 ```
 url-shortener-api/
-├── app.py              → Main FastAPI application (routes, models, middleware)
-├── config.py           → Environment variable loading
-├── database.py         → PostgreSQL + SQLite connection management
+├── src/
+│   ├── main.py         → Main FastAPI application (routes, models, middleware)
+│   ├── config.py       → Environment variable loading
+│   └── database.py     → PostgreSQL + SQLite connection management
+├── docs/
+│   ├── SPEC.md         → Project specification
+│   ├── PLAN.md         → Implementation plan
+│   ├── SHIP.md         → Deployment checklist
+│   ├── report.md       → Project report
+│   └── working-agreement.md → Team norms
+├── scripts/
+│   └── capture_screenshots.py → Screenshot utility
 ├── requirements.txt    → Python dependencies
 ├── Dockerfile          → Docker config for Render deployment
 ├── render.yaml         → Render service configuration
 ├── .env.example        → Environment variable template
 ├── .mcp.json           → MCP server config (sqlite + render)
-├── SPEC.md             → Project specification
-├── PLAN.md             → Implementation plan
-├── SHIP.md             → Deployment checklist
 ├── slides/pitch.md     → Marp presentation slides
 ├── tests/
 │   ├── conftest.py     → Test fixtures

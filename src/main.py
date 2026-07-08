@@ -15,8 +15,8 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-import config
-from database import _placeholder, get_db, init_db
+from src import config
+from src.database import _placeholder, get_db, init_db
 
 P = _placeholder()
 

@@ -1,7 +1,7 @@
 import sqlite3
 from contextlib import contextmanager
 
-import config
+from src import config
 
 USE_POSTGRES = bool(config.DATABASE_URL)
 

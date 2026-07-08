@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write(**/*.py)",
+      "Write(**/*.html)",
+      "Write(**/*.css)",
+      "Write(**/*.js)",
+      "Write(**/*.md)",
+      "Bash(pytest -v)",
+      "Bash(ruff *)"
+    ],
+    "deny": [
+      "Write(.env*)",
+      "Bash(sudo *)",
+      "Bash(rm -rf *)"
+    ],
+    "ask": [
+      "Write(*.json)",
+      "Bash"
+    ]
+  }
+}
