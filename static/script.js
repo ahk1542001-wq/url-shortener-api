@@ -83,14 +83,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
+    // UI State Management
     function showApp() {
         passwordCard.classList.add('hidden');
+        document.getElementById('landing-hero').classList.add('hidden');
         appCard.classList.remove('hidden');
         myLinksCard.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
         loadLinks();
         // Auto-focus input on open
         setTimeout(() => urlInput.focus(), 100);
+    }
+
+    function showLogin() {
+        passwordCard.classList.remove('hidden');
+        document.getElementById('landing-hero').classList.remove('hidden');
+        appCard.classList.add('hidden');
+        myLinksCard.classList.add('hidden');
+        logoutBtn.classList.add('hidden');
+        passwordInput.value = '';
+        passwordError.classList.add('hidden');
     }
 
     function showPasswordError(msg) {
