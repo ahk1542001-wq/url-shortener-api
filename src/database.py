@@ -36,10 +36,24 @@ def init_db(db_path: str = None):
         with get_db(db_path) as conn:
             cur = conn.cursor()
             cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    passcode TEXT UNIQUE NOT NULL,
+                    bio TEXT,
+                    tree_views INTEGER DEFAULT 0,
+                    social_links TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
                 CREATE TABLE IF NOT EXISTS urls (
                     id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
                     short_code TEXT UNIQUE NOT NULL,
                     original_url TEXT NOT NULL,
+                    title TEXT,
+                    show_on_tree BOOLEAN DEFAULT FALSE,
                     click_count INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_accessed TIMESTAMP
@@ -48,10 +62,24 @@ def init_db(db_path: str = None):
     else:
         with get_db(db_path) as conn:
             conn.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    passcode TEXT UNIQUE NOT NULL,
+                    bio TEXT,
+                    tree_views INTEGER DEFAULT 0,
+                    social_links TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS urls (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER REFERENCES users(id),
                     short_code TEXT UNIQUE NOT NULL,
                     original_url TEXT NOT NULL,
+                    title TEXT,
+                    show_on_tree BOOLEAN DEFAULT 0,
                     click_count INTEGER DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     last_accessed DATETIME

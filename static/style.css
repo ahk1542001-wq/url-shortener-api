@@ -692,3 +692,76 @@ footer {
     box-shadow: none;
     transform: none;
 }
+
+/* ==========================================
+   SPA Navigation & Tabs
+   ========================================== */
+
+.header-actions {
+    position: absolute;
+    right: 0;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.secondary-btn-small {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secondary-btn-small:hover {
+    background: var(--primary);
+    color: #FFFFFF;
+}
+
+.dashboard-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.4);
+    padding: 0.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.tab-btn:hover {
+    color: var(--primary);
+    box-shadow: none;
+    transform: none;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.tab-btn.active {
+    background: #FFFFFF;
+    color: var(--primary);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.tab-content {
+    animation: fadeIn 0.4s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

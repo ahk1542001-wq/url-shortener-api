@@ -4,9 +4,9 @@ import re
 import string
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +20,7 @@ from src.database import _placeholder, get_db, init_db
 
 P = _placeholder()
 
-RESERVED_CODES = {"api", "admin", "static", "health", "docs", "openapi"}
+RESERVED_CODES = {"api", "admin", "static", "health", "docs", "openapi", "u"}
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[config.RATE_LIMIT])
 
@@ -54,27 +54,26 @@ async def security_headers(request: Request, call_next):
     return response
 
 
-@app.middleware("http")
-async def password_guard(request: Request, call_next):
-    if config.ACCESS_PASSWORD:
-        needs_auth = False
-        if request.method in ("POST", "DELETE", "PUT"):
-            needs_auth = True
-        elif request.method == "GET" and request.url.path == "/api/links":
-            needs_auth = True
-        if needs_auth:
-            auth = request.headers.get("X-Access-Password", "")
-            if auth != config.ACCESS_PASSWORD:
-                return JSONResponse(
-                    status_code=401,
-                    content={
-                        "error": {
-                            "code": 401,
-                            "message": "Invalid or missing password",
-                        }
-                    },
-                )
-    return await call_next(request)
+def get_current_user(request: Request) -> dict:
+    auth = request.headers.get("X-Access-Password", "")
+    if not auth:
+        raise HTTPException(status_code=401, detail="Invalid or missing password")
+    
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(f"SELECT id, username, bio, tree_views, social_links FROM users WHERE passcode = {P}", (auth,))
+        user = c.fetchone()
+        
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or missing password")
+        
+    return {
+        "id": user[0],
+        "username": user[1],
+        "bio": user[2],
+        "tree_views": user[3],
+        "social_links": user[4]
+    }
 
 
 @app.exception_handler(HTTPException)
@@ -103,6 +102,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 class ShortenRequest(BaseModel):
     url: str
     custom_code: Optional[str] = None
+    title: Optional[str] = None
+    show_on_tree: bool = False
 
     @field_validator("url")
     @classmethod
@@ -131,6 +132,8 @@ class ShortenRequest(BaseModel):
 
 class EditLinkRequest(BaseModel):
     original_url: str
+    title: Optional[str] = None
+    show_on_tree: bool = False
 
     @field_validator("original_url")
     @classmethod
@@ -151,6 +154,8 @@ class ShortenResponse(BaseModel):
 class AnalyticsResponse(BaseModel):
     short_code: str
     original_url: str
+    title: Optional[str]
+    show_on_tree: bool
     click_count: int
     created_at: str
     last_accessed: str
@@ -180,15 +185,26 @@ def health_check():
     return {"status": "ok"}
 
 
+@app.get("/api/me")
+def get_me(user: dict = Depends(get_current_user)):
+    return {
+        "username": user["username"],
+        "bio": user["bio"],
+        "tree_views": user["tree_views"],
+        "social_links": user["social_links"]
+    }
+
+
 @app.post("/api/shorten", response_model=ShortenResponse, status_code=201)
 @limiter.limit(config.RATE_LIMIT)
-def shorten_url(request: Request, req: ShortenRequest) -> ShortenResponse:
+def shorten_url(request: Request, req: ShortenRequest, user: dict = Depends(get_current_user)) -> ShortenResponse:
     with get_db() as conn:
         c = conn.cursor()
 
         if not req.custom_code:
             c.execute(
-                f"SELECT short_code FROM urls WHERE original_url = {P}", (req.url,)
+                f"SELECT short_code FROM urls WHERE original_url = {P} AND user_id = {P}", 
+                (req.url, user["id"])
             )
             existing = c.fetchone()
             if existing:
@@ -211,21 +227,21 @@ def shorten_url(request: Request, req: ShortenRequest) -> ShortenResponse:
                 )
 
         c.execute(
-            "INSERT INTO urls (short_code, original_url) VALUES ({0}, {0})".format(P),
-            (short_code, req.url),
+            f"INSERT INTO urls (short_code, original_url, user_id, title, show_on_tree) VALUES ({P}, {P}, {P}, {P}, {P})",
+            (short_code, req.url, user["id"], req.title, req.show_on_tree),
         )
 
     return ShortenResponse(short_code=short_code, original_url=req.url)
 
 
 @app.get("/api/stats/{code}", response_model=AnalyticsResponse)
-def get_stats(code: str) -> AnalyticsResponse:
+def get_stats(code: str, user: dict = Depends(get_current_user)) -> AnalyticsResponse:
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            f"SELECT original_url, click_count, created_at, last_accessed "
-            f"FROM urls WHERE short_code = {P}",
-            (code,),
+            f"SELECT original_url, title, show_on_tree, click_count, created_at, last_accessed "
+            f"FROM urls WHERE short_code = {P} AND user_id = {P}",
+            (code, user["id"]),
         )
         result = c.fetchone()
 
@@ -235,19 +251,22 @@ def get_stats(code: str) -> AnalyticsResponse:
     return AnalyticsResponse(
         short_code=code,
         original_url=result[0],
-        click_count=result[1],
-        created_at=_fmt_dt(result[2]),
-        last_accessed=_fmt_dt(result[3]),
+        title=result[1],
+        show_on_tree=bool(result[2]),
+        click_count=result[3],
+        created_at=_fmt_dt(result[4]),
+        last_accessed=_fmt_dt(result[5]),
     )
 
 
 @app.get("/api/links")
-def list_links():
+def list_links(user: dict = Depends(get_current_user)):
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            "SELECT short_code, original_url, click_count, created_at, last_accessed "
-            "FROM urls ORDER BY created_at DESC"
+            f"SELECT short_code, original_url, title, show_on_tree, click_count, created_at, last_accessed "
+            f"FROM urls WHERE user_id = {P} ORDER BY created_at DESC",
+            (user["id"],)
         )
         rows = c.fetchall()
 
@@ -256,9 +275,11 @@ def list_links():
             {
                 "short_code": row[0],
                 "original_url": row[1],
-                "click_count": row[2],
-                "created_at": _fmt_dt(row[3]),
-                "last_accessed": _fmt_dt(row[4]),
+                "title": row[2],
+                "show_on_tree": bool(row[3]),
+                "click_count": row[4],
+                "created_at": _fmt_dt(row[5]),
+                "last_accessed": _fmt_dt(row[6]),
             }
             for row in rows
         ]
@@ -266,32 +287,75 @@ def list_links():
 
 
 @app.delete("/api/links/{code}")
-def delete_link(code: str):
+def delete_link(code: str, user: dict = Depends(get_current_user)):
     with get_db() as conn:
         c = conn.cursor()
-        c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (code,))
+        c.execute(f"SELECT id FROM urls WHERE short_code = {P} AND user_id = {P}", (code, user["id"]))
         if not c.fetchone():
             raise HTTPException(status_code=404, detail="Short code not found")
-        c.execute(f"DELETE FROM urls WHERE short_code = {P}", (code,))
+        c.execute(f"DELETE FROM urls WHERE short_code = {P} AND user_id = {P}", (code, user["id"]))
     return {"message": f"Deleted {code}"}
 
 
 @app.put("/api/links/{code}")
-def update_link(code: str, req: EditLinkRequest):
+def update_link(code: str, req: EditLinkRequest, user: dict = Depends(get_current_user)):
     with get_db() as conn:
         c = conn.cursor()
-        c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (code,))
+        c.execute(f"SELECT id FROM urls WHERE short_code = {P} AND user_id = {P}", (code, user["id"]))
         if not c.fetchone():
             raise HTTPException(status_code=404, detail="Short code not found")
         c.execute(
-            f"UPDATE urls SET original_url = {P} WHERE short_code = {P}",
-            (req.original_url, code),
+            f"UPDATE urls SET original_url = {P}, title = {P}, show_on_tree = {P} WHERE short_code = {P} AND user_id = {P}",
+            (req.original_url, req.title, req.show_on_tree, code, user["id"]),
         )
     return {"message": f"Updated {code}", "original_url": req.original_url}
 
 
+@app.get("/api/users/{username}/tree")
+def get_user_tree(username: str):
+    with get_db() as conn:
+        c = conn.cursor()
+        # Find user
+        c.execute(f"SELECT id, bio, social_links FROM users WHERE username = {P}", (username,))
+        user = c.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        user_id = user[0]
+        bio = user[1]
+        social_links = user[2]
+        
+        # Increment tree views
+        c.execute(f"UPDATE users SET tree_views = tree_views + 1 WHERE id = {P}", (user_id,))
+        
+        # Fetch public links for tree
+        c.execute(
+            f"SELECT title, short_code, original_url FROM urls WHERE user_id = {P} AND show_on_tree = {P} ORDER BY created_at DESC",
+            (user_id, True if _placeholder() == "%s" else 1) # Postgres uses TRUE, SQLite uses 1
+        )
+        rows = c.fetchall()
+        
+    return {
+        "username": username,
+        "bio": bio,
+        "social_links": social_links,
+        "links": [
+            {
+                "title": row[0] or row[2], # Fallback to original url if title is empty
+                "short_code": row[1],
+                "url": f"/{row[1]}" # The shortened redirect URL
+            }
+            for row in rows
+        ]
+    }
+
+
 @app.get("/{code}")
 def redirect_url(code: str) -> RedirectResponse:
+    if code in ["u"]:
+        raise HTTPException(status_code=404)
+        
     with get_db() as conn:
         c = conn.cursor()
         c.execute(f"SELECT original_url FROM urls WHERE short_code = {P}", (code,))
@@ -315,6 +379,16 @@ def redirect_url(code: str) -> RedirectResponse:
 
 if os.path.isdir("static"):
     app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/u/{username}")
+def serve_user_tree(username: str):
+    if not os.path.isfile("static/tree.html"):
+        return JSONResponse(
+            status_code=404,
+            content={"error": {"code": 404, "message": "Tree template not found"}},
+        )
+    return FileResponse("static/tree.html")
 
 
 @app.get("/")

@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Meta tags for sharing -->
     <title>SHORT. | Luxury Link Management</title>
     <meta name="description" content="Premium URL shortening service. Shorten your links with elegance.">
     <meta name="theme-color" content="#1C1917">
-    <!-- Favicon (SVG for high res) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
-    
     <link rel="stylesheet" href="/static/style.css">
-    
-    <!-- Plausible Analytics -->
     <script defer data-domain="swoo-sh.onrender.com" src="https://plausible.io/js/script.js"></script>
 </head>
 <body>
@@ -24,151 +19,217 @@
     <div class="container">
         <header>
             <div class="header-row">
-                <!-- Typographic Logo -->
                 <div class="brand-logo" style="display: flex; align-items: center;">
                     <img src="/static/logo.png?v=2" alt="Swoosh Logo" style="height: 65px;">
                 </div>
-                <button id="logout-btn" class="logout-btn hidden" title="Logout">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                    </svg>
-                </button>
+                <div class="header-actions">
+                    <button id="nav-login-btn" class="secondary-btn-small">Login</button>
+                    <button id="logout-btn" class="logout-btn hidden" title="Logout">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <p>Elevate your links to premium status</p>
+            <p id="header-subtitle">Elevate your links to premium status</p>
         </header>
 
         <main>
-            <!-- Landing Hero -->
-            <section id="landing-hero" class="landing-hero">
-                <div class="hero-content">
-                    <h1 class="hero-title">Own Your Links.</h1>
-                    <p class="hero-subtitle">A premium, self-hosted URL shortener with built-in click tracking, custom vanity codes, and military-grade security.</p>
-                </div>
-                
-                <div class="feature-grid">
-                    <div class="feature-card glass-card">
-                        <div class="feature-icon">🔗</div>
-                        <h3>Custom Codes</h3>
-                        <p>Create memorable vanity URLs like <code>swoo.sh/my-brand</code>.</p>
-                    </div>
-                    <div class="feature-card glass-card">
-                        <div class="feature-icon">📊</div>
-                        <h3>Click Analytics</h3>
-                        <p>Track every visitor and measure your link engagement.</p>
-                    </div>
-                    <div class="feature-card glass-card">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Secure Vault</h3>
-                        <p>Password-protected access keeps your portfolio private.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Password Card -->
-            <div class="glass-card" id="password-card">
-                <div class="lock-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        <circle cx="12" cy="16" r="1"/>
-                    </svg>
-                </div>
-                <h2 class="login-title" style="text-align: center; margin-bottom: 0.5rem;">Exclusive Access</h2>
-                <p class="login-subtitle" style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Please authenticate to continue</p>
-                <div class="input-group">
-                    <div class="password-wrapper">
-                        <input type="password" id="password" placeholder="Passcode" autocomplete="current-password">
-                        <button type="button" id="toggle-password" class="eye-btn" title="Show password">
-                            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                            <svg class="eye-closed hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <button type="button" id="password-btn" class="login-btn">
-                    <span>Enter Vault</span>
-                </button>
-                <div id="password-error" class="error hidden"></div>
-            </div>
-
-            <!-- App Card -->
-            <div class="glass-card hidden" id="app-card">
-                <form id="shorten-form">
-                    <div class="input-group">
-                        <label for="url">Original URL</label>
-                        <input type="url" id="url" placeholder="https://example.com/very/long/path" required>
+            <!-- VIEW 1: LANDING PAGE -->
+            <div id="landing-view">
+                <section class="landing-hero">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Own Your Links.</h1>
+                        <p class="hero-subtitle">A premium, self-hosted URL shortener with built-in click tracking, custom vanity codes, and a beautiful <b>Link Tree</b> profile.</p>
                     </div>
                     
+                    <!-- Feature Announcement -->
+                    <div class="glass-card new-feature-banner" style="margin-bottom: 2rem; border-color: var(--accent); background: rgba(255, 255, 255, 0.9);">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <span style="font-size: 2rem;">✨</span>
+                            <h2 style="font-size: 1.5rem; color: var(--accent);">New: Link in Bio</h2>
+                        </div>
+                        <p style="color: var(--text); font-size: 1.05rem; line-height: 1.5;">Create a stunning, glassmorphism "Link in Bio" page for your social media profiles. Organize your premium short links into one beautiful destination.</p>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card glass-card">
+                            <div class="feature-icon">🔗</div>
+                            <h3>Custom Codes</h3>
+                            <p>Create memorable vanity URLs like <code>swoo.sh/my-brand</code>.</p>
+                        </div>
+                        <div class="feature-card glass-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Analytics</h3>
+                            <p>Track every visitor and measure your link engagement.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- VIEW 2: LOGIN PAGE -->
+            <div id="login-view" class="hidden">
+                <div class="glass-card" id="password-card">
+                    <div class="lock-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            <circle cx="12" cy="16" r="1"/>
+                        </svg>
+                    </div>
+                    <h2 class="login-title" style="text-align: center; margin-bottom: 0.5rem;">Exclusive Access</h2>
+                    <p class="login-subtitle" style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Please authenticate to continue</p>
                     <div class="input-group">
-                        <label for="custom_code">Custom Vanity Code (Optional)</label>
-                        <div class="input-prefix-wrapper">
-                            <span class="prefix">swoo.sh/</span>
-                            <input type="text" id="custom_code" placeholder="vip-event">
+                        <div class="password-wrapper">
+                            <input type="password" id="password" placeholder="Passcode" autocomplete="current-password">
+                            <button type="button" id="toggle-password" class="eye-btn" title="Show password">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg class="eye-closed hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" id="password-btn" class="login-btn">
+                        <span>Enter Vault</span>
+                    </button>
+                    <button type="button" id="back-to-home-btn" class="secondary-btn" style="margin-top: 1rem;">
+                        Back to Home
+                    </button>
+                    <div id="password-error" class="error hidden"></div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: DASHBOARD -->
+            <div id="dashboard-view" class="hidden">
+                <div class="dashboard-tabs">
+                    <button class="tab-btn active" data-tab="links">Short Links</button>
+                    <button class="tab-btn" data-tab="tree">My Link Tree</button>
+                </div>
+
+                <!-- TAB 1: Short Links -->
+                <div id="tab-links" class="tab-content">
+                    <div class="glass-card" id="app-card">
+                        <h3 style="margin-bottom: 1.5rem; text-align: center;">Create New Link</h3>
+                        <form id="shorten-form">
+                            <div class="input-group">
+                                <label for="url">Original URL</label>
+                                <input type="url" id="url" placeholder="https://example.com/very/long/path" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="title">Title (For Link Tree)</label>
+                                <input type="text" id="title" placeholder="My Awesome Website">
+                            </div>
+                            <div class="input-group">
+                                <label for="custom_code">Custom Vanity Code (Optional)</label>
+                                <div class="input-prefix-wrapper">
+                                    <span class="prefix">swoo.sh/</span>
+                                    <input type="text" id="custom_code" placeholder="vip-event">
+                                </div>
+                            </div>
+                            <div class="input-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                <input type="checkbox" id="show_on_tree" style="width: auto; padding: 0;" checked>
+                                <label for="show_on_tree" style="margin: 0; cursor: pointer;">Show on my Link Tree</label>
+                            </div>
+
+                            <button type="submit" id="submit-btn" style="margin-top: 1.5rem;">
+                                <span>Shorten Link</span>
+                            </button>
+
+                            <div id="loading-container" class="loading-container">
+                                <div class="spinner"></div>
+                                <div id="loading-text" class="loading-text">Working...</div>
+                            </div>
+                        </form>
+
+                        <div id="error-message" class="error hidden"></div>
+
+                        <div id="result-section" class="result hidden">
+                            <div class="success-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <p style="font-weight: 500; font-size: 1.1rem;">Your premium link is ready.</p>
+                            <div class="short-link-box">
+                                <a href="#" id="short-link-url" target="_blank"></a>
+                                <button id="copy-btn" title="Copy to clipboard">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div id="qr-code-container" class="qr-container hidden" style="margin-top: 1rem; text-align: center;">
+                                <img id="qr-code-img" src="" alt="QR Code" style="border-radius: 8px; border: 4px solid white;">
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Scan to visit</p>
+                            </div>
+                            <button id="new-link-btn" class="secondary-btn">Create Another</button>
                         </div>
                     </div>
 
-                    <button type="submit" id="submit-btn">
-                        <span>Shorten Link</span>
-                    </button>
-
-                    <!-- Loading State for Render Cold Start -->
-                    <div id="loading-container" class="loading-container">
-                        <div class="spinner"></div>
-                        <div id="loading-text" class="loading-text">Waking up the servers...</div>
+                    <div class="glass-card my-links-card" id="my-links-card">
+                        <div class="my-links-header">
+                            <h3>Portfolio</h3>
+                            <button id="refresh-links-btn" class="icon-btn" title="Refresh">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="links-list" class="links-list">
+                            <p class="text-muted" style="text-align: center; padding: 2rem 0;">Loading portfolio...</p>
+                        </div>
                     </div>
-                </form>
-
-                <div id="error-message" class="error hidden"></div>
-
-                <div id="result-section" class="result hidden">
-                    <div class="success-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                    <p style="font-weight: 500; font-size: 1.1rem;">Your premium link is ready.</p>
-                    <div class="short-link-box">
-                        <a href="#" id="short-link-url" target="_blank"></a>
-                        <button id="copy-btn" title="Copy to clipboard">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="qr-code-container" class="qr-container hidden" style="margin-top: 1rem; text-align: center;">
-                        <img id="qr-code-img" src="" alt="QR Code" style="border-radius: 8px; border: 4px solid white;">
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Scan to visit</p>
-                    </div>
-                    <button id="new-link-btn" class="secondary-btn">Create Another</button>
                 </div>
 
-            </div> <!-- end app-card -->
+                <!-- TAB 2: Link Tree -->
+                <div id="tab-tree" class="tab-content hidden">
+                    <div class="glass-card" style="margin-bottom: 1.5rem; text-align: center;">
+                        <h3 style="margin-bottom: 0.5rem;">Your Public Link Tree</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Share this link on your social profiles.</p>
+                        
+                        <div class="short-link-box" style="margin: 0 0 1rem 0;">
+                            <a href="#" id="my-tree-url" target="_blank" style="font-weight: 600; color: var(--accent);">swoo.sh/u/username</a>
+                            <button id="copy-tree-btn" class="icon-btn" title="Copy Tree Link">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); padding: 0 0.5rem;">
+                            <span>Tree Views: <strong id="tree-views-count">0</strong></span>
+                            <a href="#" id="view-tree-btn" target="_blank" style="color: var(--text); text-decoration: underline;">View Live &rarr;</a>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 style="margin-bottom: 1.5rem;">Profile Settings</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                            To manage which links appear on your tree, edit the "Show on Tree" toggle in the Short Links tab.
+                        </p>
+                        
+                        <!-- TODO: Add form to update Bio and Socials via a new PUT endpoint if needed. For now, it's read-only setup from DB directly per user request, or we can add a basic read-only view. -->
+                        <div class="input-group">
+                            <label>Bio</label>
+                            <textarea id="profile-bio" rows="3" placeholder="Tell the world about yourself..." disabled style="width:100%; border-radius:12px; padding:1rem; border:1px solid #E7E5E4; font-family:inherit; background:rgba(255,255,255,0.6);"></textarea>
+                            <small style="color: var(--text-muted); display:block; margin-top:0.5rem;">Profile editing is currently managed by the administrator.</small>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Links Card -->
-            <div class="glass-card my-links-card hidden" id="my-links-card">
-                <div class="my-links-header">
-                    <h3>Portfolio</h3>
-                    <button id="refresh-links-btn" class="icon-btn" title="Refresh">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <polyline points="1 20 1 14 7 14"></polyline>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div id="links-list" class="links-list">
-                    <p class="text-muted" style="text-align: center; padding: 2rem 0;">Loading portfolio...</p>
-                </div>
-            </div>
+            </div> <!-- end dashboard-view -->
         </main>
         
         <footer>
@@ -188,14 +249,22 @@
                     <label for="edit-url">New Original URL</label>
                     <input type="url" id="edit-url" required>
                 </div>
+                <div class="input-group">
+                    <label for="edit-title">Title</label>
+                    <input type="text" id="edit-title">
+                </div>
+                <div class="input-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="edit-show-tree" style="width: auto; padding: 0;">
+                    <label for="edit-show-tree" style="margin: 0; cursor: pointer;">Show on Link Tree</label>
+                </div>
                 <div class="modal-actions" style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button type="button" id="cancel-edit-btn" class="secondary-btn" style="flex: 1;">Cancel</button>
-                    <button type="submit" id="save-edit-btn" style="flex: 1;">Save Changes</button>
+                    <button type="button" id="cancel-edit-btn" class="secondary-btn" style="flex: 1; margin: 0;">Cancel</button>
+                    <button type="submit" id="save-edit-btn" style="flex: 1; margin: 0;">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="/static/script.js?v=3"></script>
+    <script src="/static/script.js?v=4"></script>
 </body>
 </html>
