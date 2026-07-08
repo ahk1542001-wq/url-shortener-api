@@ -99,6 +99,7 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
                     │  │ • Headers  │  │
                     │  └─────┬──────┘  │
                     │        │         │
+                    │  [Env Variables] │ ← (DATABASE_URL injected securely via Render Dashboard, not in code)
                     └────────┼─────────┘
                              │
                              ▼
@@ -111,6 +112,8 @@ This project was built as part of the **Vibe Code Tours** cohort — a hands-on 
                     │ • Deduplication  │
                     └──────────────────┘
 ```
+
+**Security Note on Connections:** The GitHub repository remains 100% secure. The `DATABASE_URL` (Neon Connection String) and `ACCESS_PASSWORD` are **never** committed to the codebase. They are injected directly into the Render Web Service Environment Variables, ensuring that our infrastructure logic and secrets are completely decoupled.
 
 ## API Endpoints
 
