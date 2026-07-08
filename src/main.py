@@ -58,7 +58,7 @@ async def security_headers(request: Request, call_next):
 async def password_guard(request: Request, call_next):
     if config.ACCESS_PASSWORD:
         needs_auth = False
-        if request.method in ("POST", "DELETE"):
+        if request.method in ("POST", "DELETE", "PUT"):
             needs_auth = True
         elif request.method == "GET" and request.url.path == "/api/links":
             needs_auth = True
@@ -126,6 +126,19 @@ class ShortenRequest(BaseModel):
             )
         if v.lower() in RESERVED_CODES:
             raise ValueError(f"'{v}' is a reserved code and cannot be used")
+        return v
+
+
+class EditLinkRequest(BaseModel):
+    original_url: str
+
+    @field_validator("original_url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        if len(v) > 2048:
+            raise ValueError("URL must be 2048 characters or fewer")
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("URL must start with http:// or https://")
         return v
 
 
@@ -261,6 +274,20 @@ def delete_link(code: str):
             raise HTTPException(status_code=404, detail="Short code not found")
         c.execute(f"DELETE FROM urls WHERE short_code = {P}", (code,))
     return {"message": f"Deleted {code}"}
+
+
+@app.put("/api/links/{code}")
+def update_link(code: str, req: EditLinkRequest):
+    with get_db() as conn:
+        c = conn.cursor()
+        c.execute(f"SELECT id FROM urls WHERE short_code = {P}", (code,))
+        if not c.fetchone():
+            raise HTTPException(status_code=404, detail="Short code not found")
+        c.execute(
+            f"UPDATE urls SET original_url = {P} WHERE short_code = {P}",
+            (req.original_url, code),
+        )
+    return {"message": f"Updated {code}", "original_url": req.original_url}
 
 
 @app.get("/{code}")

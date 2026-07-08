@@ -650,3 +650,45 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+/* Modal and Edit Button */
+.modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 400px;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.edit-btn {
+    width: auto;
+    padding: 0.4rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 0.5rem;
+}
+
+.edit-btn:hover {
+    color: #3B82F6;
+    background: #EFF6FF;
+    border-radius: 8px;
+    box-shadow: none;
+    transform: none;
+}

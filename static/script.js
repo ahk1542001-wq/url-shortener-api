@@ -208,6 +208,12 @@ document.addEventListener('DOMContentLoaded', () => {
             shortLinkUrl.href = fullShortUrl;
             shortLinkUrl.textContent = fullShortUrl;
 
+            // Generate QR Code
+            const qrCodeImg = document.getElementById('qr-code-img');
+            const qrCodeContainer = document.getElementById('qr-code-container');
+            qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullShortUrl)}`;
+            qrCodeContainer.classList.remove('hidden');
+
             const resultText = resultSection.querySelector('p');
             resultText.textContent = data.already_exists
                 ? 'This link was already in your portfolio.'
@@ -248,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newLinkBtn.addEventListener('click', () => {
         resultSection.classList.add('hidden');
+        document.getElementById('qr-code-container').classList.add('hidden');
         form.classList.remove('hidden');
         urlInput.value = '';
         customCodeInput.value = '';
@@ -285,6 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="copy-link-btn" data-code="${escapeHtml(link.short_code)}" title="Copy Link">
                                 ${copyIconSVG}
                             </button>
+                            <button class="edit-btn" data-code="${escapeHtml(link.short_code)}" data-url="${escapeHtml(link.original_url)}" title="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
                             <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
@@ -295,6 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteLink(btn.dataset.code));
+            });
+
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => openEditModal(btn.dataset.code, btn.dataset.url));
             });
 
             document.querySelectorAll('.copy-link-btn').forEach(btn => {
@@ -338,5 +352,60 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('swoosh_password');
         location.reload();
+    });
+
+    // Edit Modal Logic
+    const editModal = document.getElementById('edit-modal');
+    const editForm = document.getElementById('edit-form');
+    const editUrlInput = document.getElementById('edit-url');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    let currentEditCode = null;
+
+    function openEditModal(code, url) {
+        currentEditCode = code;
+        editUrlInput.value = url;
+        editModal.classList.remove('hidden');
+        editUrlInput.focus();
+    }
+
+    function closeEditModal() {
+        editModal.classList.add('hidden');
+        currentEditCode = null;
+        editUrlInput.value = '';
+    }
+
+    cancelEditBtn.addEventListener('click', closeEditModal);
+
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newUrl = editUrlInput.value.trim();
+        if (!newUrl || !currentEditCode) return;
+
+        const saveBtn = document.getElementById('save-edit-btn');
+        const originalText = saveBtn.textContent;
+        saveBtn.textContent = 'Saving...';
+        saveBtn.disabled = true;
+
+        try {
+            const r = await fetch(`/api/links/${currentEditCode}`, {
+                method: 'PUT',
+                headers: headers(),
+                body: JSON.stringify({ original_url: newUrl })
+            });
+
+            if (handle401(r)) return;
+            
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error?.message || data.detail || 'Failed to update link');
+
+            showToast('Link updated successfully', 'success');
+            closeEditModal();
+            loadLinks();
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+        }
     });
 });
