@@ -10,14 +10,14 @@ async def main():
         print("Capturing 01.png - Login Screen")
         await page.goto("http://localhost:8000")
         await asyncio.sleep(2)  # Wait for animations
-        await page.screenshot(path="screenshots/01.png")
+        await page.screenshot(path="screenshots/01.png", full_page=True)
 
         print("Capturing 02.png - Main App (after login)")
         # Authenticate
         await page.fill("#password", "your-secret-password-here")
         await page.click("#password-btn")
         await asyncio.sleep(2)
-        await page.screenshot(path="screenshots/02.png")
+        await page.screenshot(path="screenshots/02.png", full_page=True)
 
         print("Capturing 03.png - Success State")
         # Create a link
@@ -25,7 +25,7 @@ async def main():
         await page.fill("#custom_code", "render-docs")
         await page.click("#submit-btn")
         await asyncio.sleep(2)
-        await page.screenshot(path="screenshots/03.png")
+        await page.screenshot(path="screenshots/03.png", full_page=True)
 
         await browser.close()
         print("Screenshots captured successfully.")
