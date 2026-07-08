@@ -118,6 +118,7 @@ header p {
 .logout-btn {
     position: absolute;
     right: 0;
+    width: auto;
     padding: 0.5rem;
     background: transparent;
     border: 1px solid var(--text-muted);
@@ -133,6 +134,9 @@ header p {
 .logout-btn:hover {
     color: var(--error);
     border-color: var(--error);
+    background: transparent;
+    transform: none;
+    box-shadow: none;
 }
 
 .glass-card {
@@ -390,7 +394,7 @@ button:disabled {
 }
 
 .icon-btn:hover {
-    background: #F5F5F4;
+    background: transparent;
     color: var(--primary);
     box-shadow: none;
     transform: none;
@@ -519,6 +523,7 @@ button:disabled {
 
 .eye-btn:hover {
     color: var(--primary);
+    background: transparent;
     box-shadow: none;
     transform: none;
 }
