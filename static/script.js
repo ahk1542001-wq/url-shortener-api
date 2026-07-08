@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const customCodeInput = document.getElementById('custom_code');
     const submitBtn = document.getElementById('submit-btn');
     const btnText = submitBtn.querySelector('span');
-    const loader = document.getElementById('btn-loader');
+    
+    // New Loading Elements
+    const loadingContainer = document.getElementById('loading-container');
+    const loadingText = document.getElementById('loading-text');
 
     const errorMsg = document.getElementById('error-message');
     const resultSection = document.getElementById('result-section');
@@ -23,6 +26,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshLinksBtn = document.getElementById('refresh-links-btn');
     const linksList = document.getElementById('links-list');
+
+    // Loading Messages for 50s Render cold start
+    const loadingMessages = [
+        "Waking up the server...",
+        "Establishing secure connection...",
+        "Almost there, please hold on...",
+        "Finalizing your premium link..."
+    ];
+    let loadingInterval = null;
+
+    // Toast Notification System
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = type === 'success' ? '✨' : '⚠️';
+        toast.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span> <span>${escapeHtml(message)}</span>`;
+        
+        container.appendChild(toast);
+        
+        // Trigger animation
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        // Remove after 3s
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 
     function getPassword() {
         return localStorage.getItem('swoosh_password') || '';
@@ -56,34 +89,48 @@ document.addEventListener('DOMContentLoaded', () => {
         myLinksCard.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
         loadLinks();
+        // Auto-focus input on open
+        setTimeout(() => urlInput.focus(), 100);
     }
 
     function showPasswordError(msg) {
-        passwordError.textContent = msg;
-        passwordError.classList.remove('hidden');
+        showToast(msg, 'error');
     }
 
     passwordBtn.addEventListener('click', async () => {
         const pw = passwordInput.value.trim();
-        if (!pw) return showPasswordError('Please enter a password');
+        if (!pw) return showPasswordError('Please enter a passcode');
+
+        const originalText = passwordBtn.querySelector('span').textContent;
+        passwordBtn.querySelector('span').textContent = "Authenticating...";
+        passwordBtn.disabled = true;
 
         try {
             const health = await fetch('/api/health');
-            if (!health.ok) return showPasswordError('Server error');
+            if (!health.ok) {
+                showPasswordError('Server error. Trying anyway...');
+            }
         } catch {
-            return showPasswordError('Server error');
+            // ignore
         }
 
-        const r = await fetch('/api/links', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'X-Access-Password': pw }
-        });
-        if (r.status === 401) return showPasswordError('Wrong password');
-        if (!r.ok) return showPasswordError('Server error');
+        try {
+            const r = await fetch('/api/links', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json', 'X-Access-Password': pw }
+            });
+            if (r.status === 401) return showPasswordError('Incorrect passcode');
+            if (!r.ok) return showPasswordError('Server connection failed');
 
-        localStorage.setItem('swoosh_password', pw);
-        passwordError.classList.add('hidden');
-        showApp();
+            localStorage.setItem('swoosh_password', pw);
+            showToast('Authentication successful', 'success');
+            showApp();
+        } catch(err) {
+            showPasswordError('Network error');
+        } finally {
+            passwordBtn.querySelector('span').textContent = originalText;
+            passwordBtn.disabled = false;
+        }
     });
 
     passwordInput.addEventListener('keydown', (e) => {
@@ -95,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         passwordInput.type = isPassword ? 'text' : 'password';
         togglePassword.querySelector('.eye-open').classList.toggle('hidden', !isPassword);
         togglePassword.querySelector('.eye-closed').classList.toggle('hidden', isPassword);
-        togglePassword.title = isPassword ? 'Hide password' : 'Show password';
+        togglePassword.title = isPassword ? 'Hide passcode' : 'Show passcode';
     });
 
     if (getPassword()) showApp();
@@ -111,9 +158,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(!url) return;
 
+        // UI Loading State
         btnText.style.display = 'none';
-        loader.style.display = 'block';
         submitBtn.disabled = true;
+        urlInput.disabled = true;
+        customCodeInput.disabled = true;
+        loadingContainer.style.display = 'block';
+        loadingText.textContent = loadingMessages[0];
+        
+        let msgIndex = 1;
+        loadingInterval = setInterval(() => {
+            if(msgIndex < loadingMessages.length) {
+                loadingText.textContent = loadingMessages[msgIndex];
+                msgIndex++;
+            }
+        }, 12000); // Change message every 12 seconds to cover the ~50s wait
 
         try {
             const payload = { url };
@@ -139,29 +198,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const resultText = resultSection.querySelector('p');
             resultText.textContent = data.already_exists
-                ? 'This URL was already shortened!'
-                : 'Your short link is ready!';
+                ? 'This link was already in your portfolio.'
+                : 'Your premium link is ready.';
 
             form.classList.add('hidden');
             resultSection.classList.remove('hidden');
 
             loadLinks();
+            showToast('Link shortened successfully', 'success');
 
         } catch (err) {
-            errorMsg.textContent = err.message;
-            errorMsg.classList.remove('hidden');
+            showToast(err.message, 'error');
         } finally {
+            clearInterval(loadingInterval);
             btnText.style.display = 'block';
-            loader.style.display = 'none';
+            loadingContainer.style.display = 'none';
             submitBtn.disabled = false;
+            urlInput.disabled = false;
+            customCodeInput.disabled = false;
         }
     });
 
+    const checkIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    const copyIconSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+
     copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(shortLinkUrl.href).then(() => {
-            const originalIcon = copyBtn.textContent;
-            copyBtn.textContent = '✅';
-            setTimeout(() => copyBtn.textContent = originalIcon, 2000);
+            copyBtn.innerHTML = checkIconSVG;
+            copyBtn.style.color = '#10B981';
+            showToast('Link copied to clipboard', 'success');
+            setTimeout(() => {
+                copyBtn.innerHTML = copyIconSVG;
+                copyBtn.style.color = 'var(--text-muted)';
+            }, 2000);
         });
     });
 
@@ -177,31 +246,37 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const r = await fetch('/api/links', { headers: headers() });
             if (handle401(r)) return;
-            if (!r.ok) throw new Error('Failed to load links');
+            if (!r.ok) throw new Error('Failed to load portfolio');
 
             const data = await r.json();
 
             if (!data.links || data.links.length === 0) {
-                linksList.innerHTML = '<div class="empty-state">No links yet. Shorten a URL above!</div>';
+                linksList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Your portfolio is empty. Create a link above.</div>';
                 return;
             }
 
             linksList.innerHTML = data.links.map(link => {
                 const lastAccessed = link.last_accessed === 'Never'
-                    ? 'Never'
+                    ? 'Unvisited'
                     : new Date(link.last_accessed + 'Z').toLocaleDateString();
                 return `
                     <div class="link-item">
                         <div class="link-info">
                             <div class="link-code">${escapeHtml(link.short_code)}</div>
-                            <div class="link-url">${escapeHtml(link.original_url)}</div>
+                            <div class="link-url" title="${escapeHtml(link.original_url)}">${escapeHtml(link.original_url)}</div>
                         </div>
                         <div class="link-stats">
                             <div class="link-clicks">${link.click_count}</div>
                             <div class="link-date">${lastAccessed}</div>
                         </div>
-                        <button class="copy-link-btn" data-code="${escapeHtml(link.short_code)}" title="Copy short URL">📋</button>
-                        <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">🗑️</button>
+                        <div style="display:flex; align-items:center;">
+                            <button class="copy-link-btn" data-code="${escapeHtml(link.short_code)}" title="Copy Link">
+                                ${copyIconSVG}
+                            </button>
+                            <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -214,21 +289,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.addEventListener('click', () => {
                     const fullUrl = `${window.location.origin}/${btn.dataset.code}`;
                     navigator.clipboard.writeText(fullUrl).then(() => {
-                        const original = btn.textContent;
-                        btn.textContent = '✅';
-                        btn.title = 'Copied!';
-                        setTimeout(() => { btn.textContent = original; btn.title = 'Copy short URL'; }, 2000);
+                        btn.innerHTML = checkIconSVG;
+                        btn.style.color = '#10B981';
+                        showToast('Link copied to clipboard', 'success');
+                        setTimeout(() => { 
+                            btn.innerHTML = copyIconSVG; 
+                            btn.style.color = 'var(--text-muted)';
+                        }, 2000);
                     });
                 });
             });
         } catch (err) {
             console.error('loadLinks failed:', err);
-            linksList.innerHTML = '<div class="empty-state">Failed to load links</div>';
+            linksList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Failed to load portfolio</div>';
         }
     }
 
     function deleteLink(code) {
-        if (!confirm(`Delete short link "${code}"?`)) return;
+        if (!confirm(`Delete short link "${code}" from your portfolio?`)) return;
 
         fetch(`/api/links/${code}`, {
             method: 'DELETE',
@@ -237,9 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => {
                 if (handle401(r)) return;
                 if (!r.ok) throw new Error('Failed to delete');
+                showToast('Link removed from portfolio', 'success');
                 loadLinks();
             })
-            .catch(err => alert(err.message));
+            .catch(err => showToast(err.message, 'error'));
     }
 
     refreshLinksBtn.addEventListener('click', loadLinks);
