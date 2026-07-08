@@ -7,3 +7,4 @@ shortener.db
 .opencode/
 .DS_Store
 venv/
+.agents/
