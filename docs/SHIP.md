@@ -3,7 +3,7 @@
 ## Pre-Launch Checklist
 
 ### Code Quality
-- [x] All tests pass (26/26)
+- [x] All tests pass (23/23)
 - [x] Lint passes (`ruff check .`)
 - [x] Format passes (`ruff format --check .`)
 - [x] No TODO/FIXME comments
@@ -15,7 +15,7 @@
 - [x] Input validation on all endpoints (Pydantic validators)
 - [x] Security headers configured (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`)
 - [x] Rate limiting on POST /api/shorten (30 req/min per IP)
-- [x] Password protection on POST/DELETE/GET /api/links
+- [x] JWT Authentication protection on POST/DELETE/GET /api/links and /api/shorten
 - [x] XSS protection — all user-supplied content escaped via `escapeHtml()` before DOM insertion
 - [x] Structured error responses (no internal details leaked)
 - [x] `.env`, `.mcp.json`, and `shortener.db` in `.gitignore`

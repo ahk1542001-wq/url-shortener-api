@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const landingView = document.getElementById('landing-view');
     const loginView = document.getElementById('login-view');
     const dashboardView = document.getElementById('dashboard-view');
+    const mainDock = document.getElementById('main-dock');
     const headerSubtitle = document.getElementById('header-subtitle');
 
     // --- Navbar Elements ---
@@ -11,13 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const backToHomeBtn = document.getElementById('back-to-home-btn');
 
     // --- Login Elements ---
+    const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
     const passwordBtn = document.getElementById('password-btn');
     const passwordError = document.getElementById('password-error');
     const togglePassword = document.getElementById('toggle-password');
 
     // --- Dashboard Tabs ---
-    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabBtns = document.querySelectorAll('.dock-btn[data-tab]');
     const tabContents = document.querySelectorAll('.tab-content');
 
     // --- Link Form Elements ---
@@ -26,10 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleInput = document.getElementById('title');
     const customCodeInput = document.getElementById('custom_code');
     const showOnTreeCheck = document.getElementById('show_on_tree');
+    const titleGroup = document.getElementById('title-group');
     const submitBtn = document.getElementById('submit-btn');
     const btnText = submitBtn.querySelector('span');
     const loadingContainer = document.getElementById('loading-container');
     const loadingText = document.getElementById('loading-text');
+
+    // Toggle title field visibility based on checkbox
+    showOnTreeCheck.addEventListener('change', () => {
+        titleGroup.style.display = showOnTreeCheck.checked ? 'block' : 'none';
+    });
 
     const errorMsg = document.getElementById('error-message');
     const resultSection = document.getElementById('result-section');
@@ -74,14 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
-    function getPassword() {
-        return localStorage.getItem('swoosh_password') || '';
+    function getToken() {
+        return localStorage.getItem('swoosh_token') || '';
     }
 
     function headers() {
         const h = { 'Content-Type': 'application/json' };
-        const pw = getPassword();
-        if (pw) h['X-Access-Password'] = pw;
+        const token = getToken();
+        if (token) h['Authorization'] = `Bearer ${token}`;
+        const ap = localStorage.getItem('swoosh_active_profile');
+        if (ap) h['X-Active-Profile'] = ap;
         return h;
     }
 
@@ -94,7 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handle401(r) {
         if (r.status === 401) {
-            localStorage.removeItem('swoosh_password');
+            localStorage.removeItem('swoosh_token');
+            localStorage.removeItem('swoosh_role');
             showLanding();
             return true;
         }
@@ -102,17 +113,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- View Routing ---
+    const featureSelectionView = document.getElementById('feature-selection-view');
+    const profileSelectionView = document.getElementById('profile-selection-view');
+    const createProfileView = document.getElementById('create-profile-view');
+    const adminView = document.getElementById('admin-view');
+    const adminCreateUserView = document.getElementById('admin-create-user-view');
+    
+    let isStandaloneMode = false;
+
     function hideAllViews() {
         landingView.classList.add('hidden');
         loginView.classList.add('hidden');
         dashboardView.classList.add('hidden');
+        if (featureSelectionView) featureSelectionView.classList.add('hidden');
+        profileSelectionView.classList.add('hidden');
+        createProfileView.classList.add('hidden');
+        if (adminView) adminView.classList.add('hidden');
+        if (adminCreateUserView) adminCreateUserView.classList.add('hidden');
+        if (mainDock) mainDock.classList.add('hidden');
     }
 
     function showLanding() {
         hideAllViews();
         landingView.classList.remove('hidden');
         navLoginBtn.classList.remove('hidden');
-        logoutBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
     }
 
@@ -120,46 +144,316 @@ document.addEventListener('DOMContentLoaded', () => {
         hideAllViews();
         loginView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
+        if (usernameInput) usernameInput.value = '';
         passwordInput.value = '';
         passwordError.classList.add('hidden');
-        setTimeout(() => passwordInput.focus(), 100);
+        if (usernameInput) setTimeout(() => usernameInput.focus(), 100);
+        else setTimeout(() => passwordInput.focus(), 100);
+    }
+
+    function showFeatureSelection() {
+        hideAllViews();
+        if(featureSelectionView) featureSelectionView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'block';
     }
 
     function showDashboard() {
+        if (!isStandaloneMode && !localStorage.getItem('swoosh_active_profile')) {
+            showProfileSelection();
+            return;
+        }
         hideAllViews();
         dashboardView.classList.remove('hidden');
+        if (mainDock) mainDock.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
-        logoutBtn.classList.remove('hidden');
         headerSubtitle.style.display = 'none';
-        
+
+        if (isStandaloneMode) {
+            document.querySelector('.dock-btn[data-tab="tree"]')?.classList.add('hidden');
+            document.querySelector('.sidebar-btn[data-tab="tree"]')?.classList.add('hidden');
+            document.getElementById('switch-profile-btn')?.classList.add('hidden');
+            document.getElementById('sidebar-switch-profile')?.classList.add('hidden');
+            document.getElementById('show-on-tree-container')?.classList.add('hidden');
+            if (typeof switchTab === 'function') switchTab('links');
+        } else {
+            document.querySelector('.dock-btn[data-tab="tree"]')?.classList.remove('hidden');
+            document.querySelector('.sidebar-btn[data-tab="tree"]')?.classList.remove('hidden');
+            document.getElementById('switch-profile-btn')?.classList.remove('hidden');
+            document.getElementById('sidebar-switch-profile')?.classList.remove('hidden');
+            document.getElementById('show-on-tree-container')?.classList.remove('hidden');
+        }
+
         loadDashboardData();
         loadLinks();
+        loadAnalytics();
     }
+
+    function showProfileSelection() {
+        hideAllViews();
+        profileSelectionView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'none';
+        loadProfiles();
+    }
+    
+    function showCreateProfile() {
+        hideAllViews();
+        createProfileView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'none';
+    }
+    
+    function showAdminDashboard() {
+        hideAllViews();
+        adminView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'none';
+        loadAdminUsers();
+    }
+    
+    function showAdminCreateUser() {
+        hideAllViews();
+        adminCreateUserView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'none';
+    }
+
+    if (document.getElementById('admin-add-user-btn')) {
+        document.getElementById('admin-add-user-btn').addEventListener('click', showAdminCreateUser);
+    }
+    if (document.getElementById('admin-cancel-user-btn')) {
+        document.getElementById('admin-cancel-user-btn').addEventListener('click', showAdminDashboard);
+    }
+    
+    const adminLogoutLinks = document.querySelectorAll('.logout-link');
+    adminLogoutLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutBtn.click();
+        });
+    });
+
+    if (document.getElementById('admin-create-user-form')) {
+        document.getElementById('admin-create-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const un = document.getElementById('new-user-username').value.trim();
+            const pw = document.getElementById('new-user-password').value.trim();
+            
+            try {
+                const r = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: headers(),
+                    body: JSON.stringify({ username: un, password: pw })
+                });
+                if (handle401(r)) return;
+                const data = await r.json();
+                if(!r.ok) throw new Error(data.detail || data.error?.message || 'Failed to create user');
+                
+                showToast('User created successfully', 'success');
+                showAdminDashboard();
+            } catch (err) {
+                const errDiv = document.getElementById('admin-create-user-error');
+                errDiv.textContent = err.message;
+                errDiv.classList.remove('hidden');
+            }
+        });
+    }
+
+    async function loadAdminUsers() {
+        const list = document.getElementById('admin-users-list');
+        list.innerHTML = '<p class="text-muted text-center">Loading users...</p>';
+        try {
+            const r = await fetch('/api/admin/users', { headers: headers() });
+            if (handle401(r)) return;
+            const data = await r.json();
+            if (!r.ok) throw new Error('Failed to fetch users');
+            
+            if (data.users.length === 0) {
+                list.innerHTML = '<p class="text-muted text-center">No users found.</p>';
+                return;
+            }
+            
+            list.innerHTML = data.users.map(u => `
+                <div class="link-item" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div class="link-code">${escapeHtml(u.username)} <span style="font-size: 0.8rem; color: var(--text-muted);">(${u.profile_count} profiles)</span></div>
+                        <div class="link-date">Created: ${escapeHtml(u.created_at)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch(err) {
+            list.innerHTML = '<p class="text-muted text-center">Error loading users</p>';
+        }
+    }
+    
+    document.getElementById('switch-profile-btn').addEventListener('click', () => {
+        localStorage.removeItem('swoosh_active_profile');
+        showProfileSelection();
+    });
+
+    const altLogoutBtn = document.getElementById('alt-logout-btn');
+    if (altLogoutBtn) {
+        altLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutBtn.click();
+        });
+    }
+    
+    document.getElementById('add-profile-btn').addEventListener('click', showCreateProfile);
+    document.getElementById('cancel-create-profile-btn').addEventListener('click', () => {
+        if(window.appProfiles && window.appProfiles.length > 0) showProfileSelection();
+        else showLanding();
+    });
+
+    // Feature Selection Listeners
+    document.getElementById('select-standalone-feature')?.addEventListener('click', () => {
+        isStandaloneMode = true;
+        localStorage.removeItem('swoosh_active_profile');
+        showDashboard();
+    });
+
+    document.getElementById('select-tree-feature')?.addEventListener('click', () => {
+        isStandaloneMode = false;
+        showProfileSelection();
+    });
+
+    document.getElementById('back-to-features-ps')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        showFeatureSelection();
+    });
+
+    document.getElementById('back-features-dock-btn')?.addEventListener('click', () => {
+        showFeatureSelection();
+    });
+
+    document.getElementById('fs-logout-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        logoutBtn.click();
+    });
+    
+    // Create Profile Form
+    document.getElementById('create-profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('new-profile-username').value.trim();
+        if(!username) return;
+        
+        try {
+            const r = await fetch('/api/profiles', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({ username })
+            });
+            if (handle401(r)) return;
+            const data = await r.json();
+            if(!r.ok) throw new Error(data.detail || data.error?.message || 'Failed to create profile');
+            
+            showToast('Profile created successfully', 'success');
+            localStorage.setItem('swoosh_active_profile', username);
+            showDashboard();
+        } catch (err) {
+            const errDiv = document.getElementById('create-profile-error');
+            errDiv.textContent = err.message;
+            errDiv.classList.remove('hidden');
+        }
+    });
+    
+    async function loadProfiles() {
+        const grid = document.getElementById('profiles-grid');
+        grid.innerHTML = '<p class="text-muted">Loading profiles...</p>';
+        try {
+            const r = await fetch('/api/profiles', {
+                method: 'GET',
+                headers: headers()
+            });
+            if (handle401(r)) return;
+            const data = await r.json();
+            if (!r.ok) throw new Error('Failed to fetch profiles');
+            
+            window.appProfiles = data.profiles;
+            
+            if (data.profiles.length === 0) {
+                showCreateProfile();
+                return;
+            }
+            
+            if (data.profiles.length >= 5) {
+                document.getElementById('add-profile-btn').style.display = 'none';
+                const limitMsg = document.createElement('p');
+                limitMsg.style.color = 'var(--text-muted)';
+                limitMsg.style.fontSize = '0.9rem';
+                limitMsg.textContent = 'Maximum profile limit (5) reached.';
+                grid.parentNode.insertBefore(limitMsg, grid.nextSibling);
+            } else {
+                document.getElementById('add-profile-btn').style.display = 'inline-block';
+            }
+            
+            grid.innerHTML = data.profiles.map(p => `
+                <div class="profile-card" data-username="${escapeHtml(p.username)}">
+                    <div class="profile-avatar">${escapeHtml(p.username.charAt(0).toUpperCase())}</div>
+                    <div class="profile-name">${escapeHtml(p.username)}</div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.profile-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    localStorage.setItem('swoosh_active_profile', card.dataset.username);
+                    showDashboard();
+                });
+            });
+            
+        } catch (err) {
+            console.error(err);
+            grid.innerHTML = '<p class="text-muted">Error loading profiles</p>';
+        }
+    }
+
 
     navLoginBtn.addEventListener('click', showLogin);
     backToHomeBtn.addEventListener('click', showLanding);
 
+    // Sidebar specific listeners
+    const sidebarBackFeatures = document.getElementById('sidebar-back-features');
+    if(sidebarBackFeatures) sidebarBackFeatures.addEventListener('click', () => {
+        document.getElementById('back-features-dock-btn')?.click();
+    });
+    
+    const sidebarSwitchProfile = document.getElementById('sidebar-switch-profile');
+    if(sidebarSwitchProfile) sidebarSwitchProfile.addEventListener('click', () => {
+        document.getElementById('switch-profile-btn')?.click();
+    });
+    
+    const sidebarLogout = document.getElementById('sidebar-logout');
+    if(sidebarLogout) sidebarLogout.addEventListener('click', () => {
+        document.getElementById('logout-btn')?.click();
+    });
+
     // --- Tabs Logic ---
-    tabBtns.forEach(btn => {
+    const allTabBtns = document.querySelectorAll('.dock-btn[data-tab], .sidebar-btn[data-tab]');
+    
+    function switchTab(tabId) {
+        allTabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.add('hidden'));
+        
+        document.querySelectorAll(`.dock-btn[data-tab="${tabId}"], .sidebar-btn[data-tab="${tabId}"]`).forEach(b => b.classList.add('active'));
+        const targetId = `tab-${tabId}`;
+        const targetEl = document.getElementById(targetId);
+        if(targetEl) targetEl.classList.remove('hidden');
+    }
+
+    allTabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active from all
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.add('hidden'));
-            
-            // Add active to clicked
-            btn.classList.add('active');
-            const targetId = `tab-${btn.dataset.tab}`;
-            document.getElementById(targetId).classList.remove('hidden');
+            switchTab(btn.dataset.tab);
         });
     });
 
     // --- Auth Logic ---
     passwordBtn.addEventListener('click', async () => {
+        const un = usernameInput ? usernameInput.value.trim() : '';
         const pw = passwordInput.value.trim();
-        if (!pw) {
-            showToast('Please enter a passcode', 'error');
+        if (!un || !pw) {
+            showToast('Please enter username and password', 'error');
             return;
         }
 
@@ -168,22 +462,34 @@ document.addEventListener('DOMContentLoaded', () => {
         passwordBtn.disabled = true;
 
         try {
-            const r = await fetch('/api/me', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json', 'X-Access-Password': pw }
+            const r = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: un, password: pw })
             });
             if (r.status === 401) {
-                showToast('Incorrect passcode', 'error');
+                showToast('Incorrect credentials', 'error');
                 return;
             }
             if (!r.ok) {
                 showToast('Server connection failed', 'error');
                 return;
             }
+            
+            const data = await r.json();
 
-            localStorage.setItem('swoosh_password', pw);
+            localStorage.setItem('swoosh_token', data.token);
+            localStorage.setItem('swoosh_role', data.role);
+            localStorage.removeItem('swoosh_active_profile'); // Clear previous profile on login
             showToast('Authentication successful', 'success');
-            showDashboard();
+            
+            if (data.role === 'admin') {
+                showAdminDashboard();
+            } else {
+                // If it's a normal user, pre-load profiles from login payload or fetch them.
+                window.appProfiles = data.profiles || [];
+                showFeatureSelection();
+            }
         } catch(err) {
             showToast('Network error', 'error');
         } finally {
@@ -205,18 +511,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('swoosh_password');
+        localStorage.removeItem('swoosh_token');
+        localStorage.removeItem('swoosh_role');
+        localStorage.removeItem('swoosh_active_profile');
+        if (document.getElementById('switch-profile-btn')) {
+            document.getElementById('switch-profile-btn').classList.add('hidden');
+        }
         showLanding();
         showToast('Logged out successfully', 'success');
     });
 
     // --- Data Loading ---
+    let currentUsername = '';
+    let qrCodeInstance = null;
+
     async function loadDashboardData() {
         try {
             const r = await fetch('/api/me', { headers: headers() });
             if (handle401(r)) return;
             if (!r.ok) throw new Error('Failed to load profile data');
             const data = await r.json();
+            
+            currentUsername = data.username;
             
             const myTreeUrl = `${window.location.origin}/u/${data.username}`;
             const myTreeLink = document.getElementById('my-tree-url');
@@ -226,9 +542,23 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('view-tree-btn').href = myTreeUrl;
             document.getElementById('tree-views-count').textContent = data.tree_views;
             
+            // Populate profile form
+            document.getElementById('profile-username').value = data.username;
             if (data.bio) {
                 document.getElementById('profile-bio').value = data.bio;
             }
+            
+            // Populate Social Links
+            const socialContainer = document.getElementById('social-links-list');
+            socialContainer.innerHTML = '';
+            if (data.social_links && data.social_links.length > 0) {
+                data.social_links.forEach(link => {
+                    renderSocialLinkRow(link.platform, link.url);
+                });
+            }
+            
+            // Generate QR Code
+            generateQRCode(myTreeUrl);
             
             document.getElementById('copy-tree-btn').onclick = () => {
                 navigator.clipboard.writeText(myTreeUrl).then(() => {
@@ -240,6 +570,175 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- QR Code ---
+    function generateQRCode(url) {
+        const qrContainer = document.getElementById('tree-qr-code');
+        qrContainer.innerHTML = '';
+        qrCodeInstance = new QRCode(qrContainer, {
+            text: url,
+            width: 180,
+            height: 180,
+            colorDark: '#1C1917',
+            colorLight: '#FFFFFF',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        // Download QR button
+        setTimeout(() => {
+            const downloadBtn = document.getElementById('download-qr-btn');
+            downloadBtn.onclick = () => {
+                const canvas = qrContainer.querySelector('canvas');
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = `qr-${currentUsername}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('QR Code downloaded', 'success');
+                }
+            };
+        }, 300);
+    }
+
+    // --- Username Change Warning ---
+    const profileUsernameInput = document.getElementById('profile-username');
+    const usernameWarning = document.getElementById('username-warning');
+    const oldUsernameDisplay = document.getElementById('old-username-display');
+
+    profileUsernameInput.addEventListener('input', () => {
+        const newVal = profileUsernameInput.value.trim().toLowerCase();
+        if (newVal !== currentUsername && currentUsername) {
+            oldUsernameDisplay.textContent = currentUsername;
+            usernameWarning.classList.remove('hidden');
+        } else {
+            usernameWarning.classList.add('hidden');
+        }
+    });
+
+    // --- Social Links UI ---
+    function renderSocialLinkRow(platform = 'twitter', url = '') {
+        const container = document.getElementById('social-links-list');
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.gap = '0.5rem';
+        row.style.alignItems = 'center';
+        
+        const select = document.createElement('select');
+        select.style.padding = '0.6rem';
+        select.style.borderRadius = '8px';
+        select.style.border = '1px solid #E7E5E4';
+        select.style.background = '#FFFFFF';
+        select.className = 'social-platform-select';
+        
+        const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'website', 'other'];
+        platforms.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+            if (p === platform) opt.selected = true;
+            select.appendChild(opt);
+        });
+        
+        const input = document.createElement('input');
+        input.type = 'url';
+        input.placeholder = 'https://...';
+        input.value = url;
+        input.className = 'social-url-input';
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'icon-btn';
+        removeBtn.style.color = '#EF4444';
+        removeBtn.innerHTML = '✕';
+        removeBtn.title = 'Remove link';
+        removeBtn.onclick = () => row.remove();
+        
+        row.appendChild(select);
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        
+        container.appendChild(row);
+    }
+
+    document.getElementById('add-social-btn').addEventListener('click', () => {
+        renderSocialLinkRow();
+    });
+
+    // --- Save Profile ---
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+    saveProfileBtn.addEventListener('click', async () => {
+        const newUsername = profileUsernameInput.value.trim().toLowerCase();
+        const newBio = document.getElementById('profile-bio').value.trim();
+        const profileError = document.getElementById('profile-error');
+        profileError.classList.add('hidden');
+
+        // Gather social links
+        const socialRows = document.getElementById('social-links-list').children;
+        const newSocialLinks = [];
+        for (let row of socialRows) {
+            const p = row.querySelector('.social-platform-select').value;
+            const u = row.querySelector('.social-url-input').value.trim();
+            if (u) {
+                newSocialLinks.push({ platform: p, url: u });
+            }
+        }
+
+        if (!newUsername || newUsername.length < 3) {
+            showToast('Username must be at least 3 characters', 'error');
+            return;
+        }
+
+        // Confirm if username changed
+        if (newUsername !== currentUsername) {
+            if (!confirm(`⚠️ Username ကို "${currentUsername}" ကနေ "${newUsername}" ကို ပြောင်းမှာ သေချာပါသလား? URL အဟောင်း (swoo.sh/u/${currentUsername}) က အလုပ်မလုပ်တော့ပါဘူး။`)) {
+                return;
+            }
+        }
+
+        const originalText = saveProfileBtn.querySelector('span').textContent;
+        saveProfileBtn.querySelector('span').textContent = 'Saving...';
+        saveProfileBtn.disabled = true;
+
+        try {
+            const r = await fetch('/api/me', {
+                method: 'PUT',
+                headers: headers(),
+                body: JSON.stringify({ 
+                    username: newUsername, 
+                    bio: newBio || null,
+                    social_links: newSocialLinks.length > 0 ? newSocialLinks : null
+                })
+            });
+
+            if (handle401(r)) return;
+            const data = await r.json();
+            
+            if (!r.ok) {
+                throw new Error(data.error?.message || data.detail || 'Failed to update profile');
+            }
+
+            currentUsername = data.username;
+            usernameWarning.classList.add('hidden');
+
+            // Update displayed URL and QR
+            const newTreeUrl = `${window.location.origin}/u/${data.username}`;
+            const myTreeLink = document.getElementById('my-tree-url');
+            myTreeLink.href = newTreeUrl;
+            myTreeLink.textContent = `swoo.sh/u/${data.username}`;
+            document.getElementById('view-tree-btn').href = newTreeUrl;
+            
+            generateQRCode(newTreeUrl);
+
+            showToast('Profile updated successfully!', 'success');
+        } catch (err) {
+            showToast(err.message, 'error');
+            profileError.textContent = err.message;
+            profileError.classList.remove('hidden');
+        } finally {
+            saveProfileBtn.querySelector('span').textContent = originalText;
+            saveProfileBtn.disabled = false;
+        }
+    });
+
     async function loadLinks() {
         try {
             const r = await fetch('/api/links', { headers: headers() });
@@ -249,7 +748,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await r.json();
 
             if (!data.links || data.links.length === 0) {
-                linksList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Your portfolio is empty. Create a link above.</div>';
+                linksList.innerHTML = `
+                    <div class="empty-state-illustrative">
+                        <div class="icon">✨</div>
+                        <h3>No Links Yet</h3>
+                        <p>Your portfolio is empty. Create a magical link above to get started!</p>
+                    </div>`;
                 return;
             }
 
@@ -318,8 +822,62 @@ document.addEventListener('DOMContentLoaded', () => {
             linksList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Failed to load portfolio</div>';
         }
     }
+    
+    async function loadAnalytics() {
+        const analyticsList = document.getElementById('analytics-list');
+        if (!analyticsList) return;
+        
+        analyticsList.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem 0;">Loading analytics...</p>';
+        try {
+            const r = await fetch('/api/analytics', { headers: headers() });
+            if (handle401(r)) return;
+            if (!r.ok) throw new Error('Failed to load analytics');
 
-    refreshLinksBtn.addEventListener('click', loadLinks);
+            const data = await r.json();
+
+            if (!data.analytics || data.analytics.length === 0) {
+                analyticsList.innerHTML = `
+                    <div class="empty-state-illustrative">
+                        <div class="icon">📊</div>
+                        <h3>No Data Yet</h3>
+                        <p>Share your links to see performance metrics appear here.</p>
+                    </div>`;
+                return;
+            }
+
+            analyticsList.innerHTML = data.analytics.map(link => {
+                const maxClicks = Math.max(...link.daily.map(d => d.clicks), 1);
+                const sparkline = link.daily.slice(-7).map(d => 
+                    `<div style="display:inline-block; width: 8px; height: ${Math.max(4, (d.clicks / maxClicks) * 30)}px; background: var(--accent); margin: 0 2px; border-radius: 2px;" title="${d.date}: ${d.clicks} clicks"></div>`
+                ).join('');
+                
+                return `
+                    <div class="link-item" style="display:flex; flex-direction:column; gap: 0.5rem; padding-right:1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <div class="link-info">
+                                <div class="link-code">${escapeHtml(link.title)} <span style="font-size:0.8rem; color:var(--text-muted);">/${escapeHtml(link.short_code)}</span></div>
+                            </div>
+                            <div class="link-stats" style="font-size: 1.2rem; font-weight: 600; color: var(--primary);">
+                                ${link.total_clicks} <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">total</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; align-items:flex-end; height:30px; opacity:0.8;">
+                            ${sparkline || '<span style="font-size:0.8rem; color:var(--text-muted);">No recent daily data</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+        } catch (err) {
+            console.error('loadAnalytics failed:', err);
+            analyticsList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Failed to load analytics</div>';
+        }
+    }
+
+    refreshLinksBtn.addEventListener('click', () => {
+        loadLinks();
+        loadAnalytics();
+    });
 
     // --- Link Operations ---
     form.addEventListener('submit', async (e) => {
@@ -502,8 +1060,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Init ---
-    if (getPassword()) {
-        showDashboard();
+    if (getToken()) {
+        if (localStorage.getItem('swoosh_role') === 'admin') {
+            showAdminDashboard();
+        } else {
+            if (localStorage.getItem('swoosh_active_profile')) {
+                isStandaloneMode = false;
+                showDashboard();
+            } else {
+                showFeatureSelection();
+            }
+        }
     } else {
         showLanding();
     }

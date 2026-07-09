@@ -7,7 +7,7 @@
 
 ## Testing
 - Tests are written in Pytest (`tests/`).
-- Use the `client` fixture (from `fastapi.testclient`) for all endpoint tests.
+- Use the `auth_client` fixture (from `conftest.py`) for all endpoint tests that require authentication.
 - Database access is mocked/patched to use an in-memory SQLite database (`test.db`) during testing via `conftest.py`.
 
 ## API Responses
@@ -18,4 +18,5 @@
 ## Security
 - Always use parameterized queries (via the `P` placeholder helper in `database.py`) to prevent SQL injection.
 - Validate all incoming URLs via Pydantic (`validators`).
-- Set security headers on all responses via the `security_headers` middleware in `app.py`.
+- Set security headers on all responses via the `security_headers` middleware in `src/main.py`.
+- Authentication is handled via JWT Bearer tokens passed in the `Authorization` header.

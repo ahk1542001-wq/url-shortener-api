@@ -8,5 +8,7 @@ services:
         sync: false
       - key: RATE_LIMIT
         value: 30/minute
-      - key: ACCESS_PASSWORD
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
         sync: false

@@ -39,7 +39,15 @@ def init_db(db_path: str = None):
                 CREATE TABLE IF NOT EXISTS users (
                     id SERIAL PRIMARY KEY,
                     username TEXT UNIQUE NOT NULL,
-                    passcode TEXT UNIQUE NOT NULL,
+                    hashed_password TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS profiles (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    username TEXT UNIQUE NOT NULL,
                     bio TEXT,
                     tree_views INTEGER DEFAULT 0,
                     social_links TEXT,
@@ -50,6 +58,7 @@ def init_db(db_path: str = None):
                 CREATE TABLE IF NOT EXISTS urls (
                     id SERIAL PRIMARY KEY,
                     user_id INTEGER REFERENCES users(id),
+                    profile_id INTEGER REFERENCES profiles(id),
                     short_code TEXT UNIQUE NOT NULL,
                     original_url TEXT NOT NULL,
                     title TEXT,
@@ -59,13 +68,30 @@ def init_db(db_path: str = None):
                     last_accessed TIMESTAMP
                 )
             """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS daily_stats (
+                    id SERIAL PRIMARY KEY,
+                    link_id INTEGER REFERENCES urls(id),
+                    date DATE NOT NULL,
+                    clicks INTEGER DEFAULT 0,
+                    UNIQUE(link_id, date)
+                )
+            """)
     else:
         with get_db(db_path) as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
-                    passcode TEXT UNIQUE NOT NULL,
+                    hashed_password TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS profiles (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER REFERENCES users(id),
+                    username TEXT UNIQUE NOT NULL,
                     bio TEXT,
                     tree_views INTEGER DEFAULT 0,
                     social_links TEXT,
@@ -76,6 +102,7 @@ def init_db(db_path: str = None):
                 CREATE TABLE IF NOT EXISTS urls (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER REFERENCES users(id),
+                    profile_id INTEGER REFERENCES profiles(id),
                     short_code TEXT UNIQUE NOT NULL,
                     original_url TEXT NOT NULL,
                     title TEXT,
@@ -83,5 +110,14 @@ def init_db(db_path: str = None):
                     click_count INTEGER DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     last_accessed DATETIME
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS daily_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    link_id INTEGER REFERENCES urls(id),
+                    date TEXT NOT NULL,
+                    clicks INTEGER DEFAULT 0,
+                    UNIQUE(link_id, date)
                 )
             """)
