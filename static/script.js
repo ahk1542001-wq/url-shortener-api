@@ -27,17 +27,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlInput = document.getElementById('url');
     const titleInput = document.getElementById('title');
     const customCodeInput = document.getElementById('custom_code');
-    const showOnTreeCheck = document.getElementById('show_on_tree');
+    const linkModeInput = document.getElementById('link-mode'); // Not used anymore but keep for now
     const titleGroup = document.getElementById('title-group');
     const submitBtn = document.getElementById('submit-btn');
     const btnText = submitBtn.querySelector('span');
     const loadingContainer = document.getElementById('loading-container');
     const loadingText = document.getElementById('loading-text');
 
+    const showOnTreeCheck = document.getElementById('show_on_tree');
+    
     // Toggle title field visibility based on checkbox
-    showOnTreeCheck.addEventListener('change', () => {
-        titleGroup.style.display = showOnTreeCheck.checked ? 'block' : 'none';
-    });
+    if (showOnTreeCheck) {
+        showOnTreeCheck.addEventListener('change', () => {
+            if (showOnTreeCheck.checked) {
+                titleGroup.classList.remove('hidden');
+                titleInput.required = true;
+            } else {
+                titleGroup.classList.add('hidden');
+                titleInput.required = false;
+                titleInput.value = ''; // clear when hiding
+            }
+        });
+    }
 
     const errorMsg = document.getElementById('error-message');
     const resultSection = document.getElementById('result-section');
@@ -138,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         landingView.classList.remove('hidden');
         navLoginBtn.classList.remove('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
     }
 
     function showLogin() {
@@ -145,6 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loginView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
+        
         if (usernameInput) usernameInput.value = '';
         passwordInput.value = '';
         passwordError.classList.add('hidden');
@@ -157,6 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(featureSelectionView) featureSelectionView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
     }
 
     function showDashboard() {
@@ -169,6 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mainDock) mainDock.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
 
         if (isStandaloneMode) {
             document.querySelector('.dock-btn[data-tab="tree"]')?.classList.add('hidden');
@@ -195,6 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
         profileSelectionView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
         loadProfiles();
     }
     
@@ -203,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         createProfileView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
     }
     
     function showAdminDashboard() {
@@ -210,6 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
         loadAdminUsers();
     }
     
@@ -218,6 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adminCreateUserView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
     }
 
     if (document.getElementById('admin-add-user-btn')) {
@@ -225,6 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (document.getElementById('admin-cancel-user-btn')) {
         document.getElementById('admin-cancel-user-btn').addEventListener('click', showAdminDashboard);
+    }
+    if (document.getElementById('nav-admin-back')) {
+        document.getElementById('nav-admin-back').addEventListener('click', showAdminDashboard);
     }
     
     const adminLogoutLinks = document.querySelectorAll('.logout-link');
@@ -889,9 +920,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = urlInput.value.trim();
         const customCode = customCodeInput.value.trim();
         const title = titleInput.value.trim();
-        const showOnTree = showOnTreeCheck.checked;
+        const showOnTree = linkModeInput.value === 'tree';
 
         if(!url) return;
+        if(showOnTree && !title) {
+            errorMsg.textContent = 'Please provide a title for your Link Tree entry.';
+            errorMsg.classList.remove('hidden');
+            return;
+        }
 
         btnText.style.display = 'none';
         submitBtn.disabled = true;
@@ -937,19 +973,31 @@ document.addEventListener('DOMContentLoaded', () => {
             qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullShortUrl)}`;
             qrCodeContainer.classList.remove('hidden');
 
-            const resultText = resultSection.querySelector('p');
-            resultText.textContent = data.already_exists
-                ? 'This link was already in your portfolio.'
-                : 'Your premium link is ready.';
+            const resultText = document.getElementById('result-message');
+            
+            let successMsg = '';
+            if (data.already_exists) {
+                successMsg = 'This link was already in your portfolio.';
+            } else if (showOnTree) {
+                successMsg = 'Success! Added to your Link Tree.';
+            } else {
+                successMsg = 'Success! Your short link is ready.';
+            }
+            
+            resultText.textContent = successMsg;
 
             form.classList.add('hidden');
             resultSection.classList.remove('hidden');
+            
+            document.querySelector('.mode-toggle').classList.add('hidden');
 
             loadLinks();
-            showToast('Link shortened successfully', 'success');
+            showToast(successMsg, 'success');
 
         } catch (err) {
             showToast(err.message, 'error');
+            errorMsg.textContent = err.message;
+            errorMsg.classList.remove('hidden');
         } finally {
             clearInterval(loadingInterval);
             btnText.style.display = 'block';
@@ -980,6 +1028,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.classList.add('hidden');
         document.getElementById('qr-code-container').classList.add('hidden');
         form.classList.remove('hidden');
+        document.querySelector('.mode-toggle').classList.remove('hidden');
+        errorMsg.classList.add('hidden');
         urlInput.value = '';
         customCodeInput.value = '';
         titleInput.value = '';
