@@ -16,6 +16,10 @@
 
 ## Top 3 things to fix
 
-- [ ] Add an "Edit Link" feature (Chapter 6).
-- [ ] Add a "Delete Link" feature (Chapter 6).
-- [ ] Implement a QR Code generator for the shortened URLs.
+- [x] Add an "Edit Link" feature.
+- [x] Add a "Delete Link" feature.
+- [x] Implement local QR Code generation for shortened URLs and Link Tree pages.
+
+## Resolution
+
+All three requests are implemented. QR codes are generated locally in the browser so sharing does not depend on an external QR API.

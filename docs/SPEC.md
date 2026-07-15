@@ -17,7 +17,7 @@ A self-hosted URL shortener API that turns long URLs into short, trackable links
 - **Testing:** pytest
 - **Rate limiting:** slowapi (30 req/min per IP)
 - **Hosting:** Render (free tier)
-- **Frontend:** Vanilla HTML/CSS/JS with Premium Glassmorphism UI (Sidebar/Dock)
+- **Frontend:** Vanilla HTML/CSS/JS with Premium Glassmorphism UI (desktop sidebar and mobile top navigation)
 
 ## Commands
 
@@ -35,9 +35,10 @@ Format:  ruff format .
 | Multi-User Auth | POST /api/login → returns JWT token |
 | Shorten URLs | POST /api/shorten → returns 6-char code |
 | Custom codes | Optional, 3-20 chars, alphanumeric + hyphens |
-| Link Tree Profiles | POST /api/profiles → Create a profile to organize links |
+| Link Tree Profiles | POST /api/profiles → Create and switch among up to five public link-in-bio pages |
 | Edit Link Tree | PUT /api/me → Update profile bio and social links |
 | Link Tree Avatars | POST /api/profiles/avatar → Upload profile picture |
+| Local QR Codes | Generate QR codes in the browser without a third-party QR request |
 | Standalone Links | Shorten URLs without a profile (kept private) |
 | Redirect | GET /{code} → 302 redirect + click tracking |
 | Link listing | GET /api/links (JWT protected) |
@@ -77,6 +78,9 @@ Format:  ruff format .
 - **Naming:** `test_<what>_<condition>_<expected>`
 
 ## Boundaries
+
+- **UI product boundary:** The frontend exposes two distinct workspaces: Shortener and Link Tree. Each login account can create, select, and manage up to five Link Tree profiles. Standalone short links remain separate from profile Link Trees.
+- **Brand palette:** Olive Ink (`#2F3A1D`) is the main brand surface and Warm Lime (`#CFFF74`) is reserved for primary actions and active states.
 
 - **Always:** Run `pytest` before committing, validate all inputs, use parameterized SQL, handle DB connections with context managers
 - **Ask first:** Changing the DB schema, adding new endpoints, modifying rate limits

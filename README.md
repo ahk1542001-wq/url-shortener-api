@@ -1,221 +1,243 @@
-# Swoosh — URL Shortener API
+# Swoosh - URL Shortener and Link-in-Bio Builder
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-CFFF74?style=flat-square)
 
-> **Like bit.ly, but you own it.** A self-hosted URL shortener with click tracking, rate limiting, and a premium glassmorphism UI.
+**Swoosh turns long URLs into short, trackable links and lets each account build up to five public link-in-bio pages.** It is useful for students, creators, clubs, small teams, and anyone who wants to own their links instead of depending entirely on a hosted shortening or profile service.
 
-🔗 **Live:** [swoo-sh.onrender.com](https://swoo-sh.onrender.com)
+[Live demo](https://swoo-sh.onrender.com) | [API docs](https://swoo-sh.onrender.com/docs) | [Report an issue](https://github.com/ahk1542001-wq/url-shortener-api/issues)
 
----
+> Accounts are created by an administrator. Public self-registration is intentionally disabled.
 
-## What Is This?
+## What Can I Do With It?
 
-Swoosh is a self-hosted URL shortener — like bit.ly, but you own it. Paste a long URL, get a short code back. Share the short link anywhere. When someone clicks it, they get redirected to the original URL while Swoosh tracks how many times it was clicked.
+You do not need to be a developer to use a deployed Swoosh instance.
 
-With the latest update, Swoosh supports **multi-user accounts** and **Link Trees**, allowing users to manage multiple public profile pages or create standalone URLs disconnected from any public profile.
+1. Sign in with an account supplied by the administrator.
+2. Choose **Shortener** to create a short URL with an optional custom code.
+3. Choose **Link Tree** to create and manage public profile pages.
+4. Add a bio, avatar, and social or website links to each profile.
+5. Share the short URL, public profile URL, or locally generated QR code.
+6. Review link clicks and Link Tree visits from separate analytics views.
 
-## What It Does
+Each login account can create **up to five Link Tree profiles**. Standalone short links remain separate from profile-specific links, so a private link collection does not automatically appear on a public page.
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-User Accounts** | Login securely with username/password backed by JWT authentication. (Accounts are created by admin only; no public registration). |
-| **Link Tree Mode** | Create public Link Tree pages (`/u/{username}`) complete with customizable bios, social links, and avatars. |
-| **Standalone Mode** | Create standard short URLs. |
-| **Shorten URLs** | Paste a long URL → get a 6-character short code. |
-| **Custom codes** | Choose your own short code (e.g., `swoo.sh/my-event`). |
-| **Click tracking** | Every redirect increments a click counter, with basic analytics. |
-| **Premium UI/UX** | Desktop Sidebar, Mobile Dock, Adaptive Themes (Light/Dark mode), fluid animations, and playful empty states. |
-| **Rate limiting** | 30 requests per minute per IP to prevent abuse. |
-| **Security headers** | Every response includes anti-XSS, anti-clickjacking headers. |
-| **Input validation** | Rejects bad URLs, short codes with special chars, reserved words. |
+## Product Tour
 
-## Tech Stack
+| Landing and feature selection | Link management |
+|---|---|
+| ![Swoosh landing page](screenshots/01_landing_desktop.png) | ![Swoosh link dashboard](screenshots/05_dashboard_populated_desktop.png) |
 
-- **Backend:** Python 3.11 + FastAPI
-- **Authentication:** JWT (JSON Web Tokens) with bcrypt password hashing
-- **Database:** Neon PostgreSQL (free, permanent) — falls back to SQLite for local dev
-- **Hosting:** Render (free tier)
-- **Frontend:** Vanilla HTML/CSS/JS with glassmorphism, responsive Sidebar/Dock, Adaptive Themes
+| Link Tree workspace | Public Link Tree |
+|---|---|
+| ![Swoosh Link Tree dashboard](screenshots/08_tree_dashboard_populated_desktop.png) | ![Swoosh public profile](screenshots/09_public_tree_desktop.png) |
 
-## API Endpoints
+Mobile screenshots are available in [`screenshots/`](screenshots/).
 
-### Login & Get Token
-```bash
-curl -X POST https://swoo-sh.onrender.com/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "your-password"}'
-```
-Response: `{"token": "ey..."}`
+## Features
 
-### Shorten a URL (Standalone)
-```bash
-curl -X POST https://swoo-sh.onrender.com/api/shorten \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-token>" \
-  -d '{"url": "https://example.com/very/long/path"}'
-```
+| Area | Included |
+|---|---|
+| Short links | Generated codes, custom vanity codes, copy, edit, delete, and QR display |
+| Analytics | Redirect click totals, daily statistics, and Link Tree visit counts |
+| Link Trees | Up to five profiles per account, profile switching, bio, avatar, and social links |
+| Accounts | JWT login, bcrypt password hashes, and admin-created users |
+| Storage | SQLite for local development and Neon PostgreSQL for production |
+| Avatar media | Validated image uploads stored in Cloudinary |
+| Security | Input validation, rate limiting, security headers, reserved routes, and structured errors |
+| Interface | Responsive Olive Ink and Warm Lime UI with desktop and mobile top navigation |
+| QR codes | Generated locally in the browser; no external QR request is required |
 
-### Create Link Tree Profile
-```bash
-curl -X POST https://swoo-sh.onrender.com/api/profiles \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-token>" \
-  -d '{"username": "my-profile"}'
-```
+## For Developers
 
-### Update Link Tree Profile (Active Profile)
-```bash
-curl -X PUT https://swoo-sh.onrender.com/api/me \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-token>" \
-  -H "X-Active-Profile: my-profile" \
-  -d '{"username": "my-profile", "bio": "Hello world", "social_links": [{"platform": "twitter", "url": "https://twitter.com/my-profile", "title": "Twitter"}]}'
+### Architecture
+
+Swoosh is a small monolithic web application:
+
+```text
+Browser (HTML/CSS/JS)
+        |
+        v
+FastAPI on Render -----> Cloudinary (avatars)
+        |
+        +-------------> Neon PostgreSQL (production)
+        |
+        +-------------> SQLite (local development)
 ```
 
-### Upload Link Tree Avatar
-```bash
-curl -X POST https://swoo-sh.onrender.com/api/profiles/avatar \
-  -H "Authorization: Bearer <your-token>" \
-  -H "X-Active-Profile: my-profile" \
-  -F "file=@/path/to/avatar.jpg"
-```
+The frontend is served directly by FastAPI. Authenticated API requests use a bearer JWT. The `X-Active-Profile` header selects a Link Tree profile; omitting it selects the standalone shortener workspace.
 
-### Visit a short link (no auth needed)
-```
-https://swoo-sh.onrender.com/aB3xYz
-→ 302 redirect to https://example.com/very/long/path
-```
+More detail is available in [`wiki/architecture.md`](wiki/architecture.md), [`docs/SPEC.md`](docs/SPEC.md), and [`docs/PLAN.md`](docs/PLAN.md).
 
-### View a Link Tree
-```
-https://swoo-sh.onrender.com/u/my-profile
-→ Renders a public link tree page for that profile.
-```
+### Requirements
 
-## Run Locally
+- Python 3.11
+- Git
+- A modern browser
+- Optional: Neon PostgreSQL for production-compatible database testing
+- Optional: Cloudinary for avatar uploads
+
+### Local Setup
 
 ```bash
-# Clone
 git clone https://github.com/ahk1542001-wq/url-shortener-api.git
 cd url-shortener-api
 
-# Set up Python environment
-python3 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Create your .env file, then fill in the generated values
 cp .env.example .env
 openssl rand -hex 32
-python -c "from passlib.hash import bcrypt; print(bcrypt.hash('YOUR_STRONG_ADMIN_PASSWORD'))"
+python -c "from passlib.hash import bcrypt; print(bcrypt.hash('CHANGE_THIS_ADMIN_PASSWORD'))"
+```
 
-# In .env, set JWT_SECRET to the first command's output and
-# ADMIN_PASSWORD_HASH to the second command's output.
+Put the generated secret and bcrypt hash in `.env`:
 
-# Start the server
+```dotenv
+DATABASE_URL=
+DB_NAME=shortener.db
+JWT_SECRET=PASTE_THE_64_CHARACTER_OPENSSL_OUTPUT
+ADMIN_PASSWORD_HASH=PASTE_THE_BCRYPT_HASH
+RATE_LIMIT=30/minute
+```
+
+Leave `DATABASE_URL` empty to use SQLite. Then start the application:
+
+```bash
 uvicorn src.main:app --reload --port 8000
 ```
 
-Open `http://localhost:8000` to interact with the web interface.
+Open:
 
-## Deploy Your Own
+- Application: `http://127.0.0.1:8000`
+- Interactive API documentation: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/api/health`
 
-### 1. Create a free Neon database
+The configured `admin` account is created or updated during database initialization. Use the admin dashboard to create normal user accounts.
 
-1. Go to [neon.tech](https://neon.tech) → sign up (free, no credit card)
-2. Create a project → copy the connection string
+### Enable Avatar Uploads
 
-### 2. Deploy to Render
+Create a Cloudinary account and set all three variables together:
 
-1. Go to [render.com](https://render.com) → sign up with GitHub
-2. **New +** → **Web Service** → connect your fork of this repo
-3. **Start Command:** `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
-4. **Environment Variables** (set these in the Render dashboard):
-   - `DATABASE_URL` — your Neon connection string
-   - `RATE_LIMIT` — `30/minute`
-   - `JWT_SECRET` — choose a secure string
-   - `ADMIN_PASSWORD_HASH` — your generated bcrypt hash
-5. Select **Free** → **Deploy**
+```dotenv
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
 
-## Validation Rules
+If none are set, the rest of Swoosh still works and avatar upload returns a clear `503` configuration error. Partial Cloudinary configuration is rejected at startup.
 
-| Field | Rule |
-|-------|------|
-| `url` | Must start with `http://` or `https://`, max 2048 characters |
-| `custom_code` | 3-20 characters, letters/numbers/hyphens only, not a reserved word |
+### Environment Variables
 
-**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`, `u`
+| Variable | Required | Purpose |
+|---|---:|---|
+| `JWT_SECRET` | Yes | Signs JWTs; must be at least 32 characters and not a placeholder |
+| `ADMIN_PASSWORD_HASH` | Yes | Valid bcrypt hash for the deterministic admin account |
+| `DATABASE_URL` | Production | Neon/PostgreSQL connection string; empty uses SQLite |
+| `DB_NAME` | SQLite only | SQLite file path; defaults to `shortener.db` |
+| `RATE_LIMIT` | No | Shorten endpoint limit; defaults to `30/minute` |
+| `HOST` | No | Bind host; defaults to `0.0.0.0` |
+| `PORT` | No | Bind port; defaults to `5000` |
+| `CLOUDINARY_CLOUD_NAME` | Avatar uploads | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Avatar uploads | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Avatar uploads | Cloudinary API secret |
 
-## Environment Variables
+Never commit `.env`, database credentials, API secrets, or production database URLs.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | (empty) | Neon PostgreSQL connection string. If empty, uses SQLite |
-| `DB_NAME` | `shortener.db` | SQLite database file path (local dev only) |
-| `HOST` | `0.0.0.0` | Server bind address |
-| `PORT` | `8000` | Server port |
-| `RATE_LIMIT` | `30/minute` | Rate limit on POST /api/shorten |
-| `JWT_SECRET` | (required) | Secret key used to sign JWT tokens |
-| `ADMIN_PASSWORD_HASH`| (required) | bcrypt hash for the default admin user |
-| `CLOUDINARY_CLOUD_NAME` | (empty) | Cloudinary cloud name for avatar storage |
-| `CLOUDINARY_API_KEY` | (empty) | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | (empty) | Cloudinary API secret |
+## API Overview
 
-## Error Responses
+All private endpoints require `Authorization: Bearer <token>`. Profile-specific requests also send `X-Active-Profile: <profile-username>`.
 
-All errors return structured JSON:
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/login` | Authenticate and receive a JWT |
+| `GET` | `/api/profiles` | List the account's profiles and profile limit |
+| `POST` | `/api/profiles` | Create a Link Tree profile |
+| `GET` / `PUT` | `/api/me` | Read or update the active profile |
+| `POST` | `/api/profiles/avatar` | Validate and upload an avatar |
+| `POST` | `/api/shorten` | Create a standalone or profile-scoped short link |
+| `GET` | `/api/links` | List links in the current workspace |
+| `PUT` / `DELETE` | `/api/links/{code}` | Update or delete a link |
+| `GET` | `/api/analytics` | Return analytics for the current workspace |
+| `GET` | `/api/users/{username}/tree` | Public Link Tree JSON |
+| `GET` | `/u/{username}` | Public Link Tree page |
+| `GET` | `/{code}` | Redirect a short code and record a click |
+| `GET` | `/api/health` | Service health check |
+
+### Example: Log In and Create a Standalone Link
+
+```bash
+TOKEN=$(curl -sS -X POST http://127.0.0.1:8000/api/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"YOUR_ADMIN_PASSWORD"}' \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["token"])')
+
+curl -X POST http://127.0.0.1:8000/api/shorten \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com/long/path","custom_code":"example-link","title":"Example"}'
+```
+
+### Validation Rules
+
+- URLs must begin with `http://` or `https://` and be at most 2048 characters.
+- Custom codes must be 3-20 characters containing letters, numbers, or hyphens.
+- Profile usernames must be 3-30 characters containing letters, numbers, or hyphens.
+- Reserved names include `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`, and `u`.
+- Profile bios reject HTML and are limited to 500 characters.
+
+Errors use a consistent structure:
 
 ```json
-{"error": {"code": 422, "message": "body -> url: URL must start with http:// or https://"}}
+{"error":{"code":422,"message":"URL must start with http:// or https://"}}
 ```
 
-| Code | Meaning |
-|------|---------|
-| 401 | Unauthorized / Invalid JWT token |
-| 404 | Short code not found |
-| 409 | Custom code already in use |
-| 422 | Validation error |
-| 429 | Rate limit exceeded |
+## Testing and Quality Checks
 
-## Project Structure
+```bash
+./.venv/bin/python -m pytest -v
+./.venv/bin/ruff check .
+./.venv/bin/ruff format --check .
+node --check static/script.js
+git diff --check
+```
 
+The PostgreSQL migration integration test is skipped unless a disposable `POSTGRES_TEST_URL` is provided. It also requires `ALLOW_DESTRUCTIVE_POSTGRES_TESTS=yes` and rejects database names that do not contain `test`.
+
+## Deployment
+
+The reference deployment uses Render, Neon PostgreSQL, and Cloudinary.
+
+1. Create a Neon project and copy its pooled PostgreSQL connection string.
+2. Create a Cloudinary account if avatar upload is required.
+3. Create a Render web service from this repository using the included Dockerfile or `render.yaml`.
+4. Set `DATABASE_URL`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, and the optional Cloudinary variables.
+5. Before a migration, create a Neon branch or snapshot and rehearse against a disposable test branch.
+6. Deploy and verify `/api/health`, login, shortening, redirect, profile switching, public Link Tree, analytics, and avatar upload.
+
+See [`docs/SHIP.md`](docs/SHIP.md) for the complete deployment and rollback checklist.
+
+## Project Layout
+
+```text
+src/          FastAPI application, routers, database, auth, and analytics
+static/       Responsive frontend, public Link Tree, logo, and local QR library
+tests/        API, migration, security, UI contract, and lifecycle tests
+docs/         Specification, plan, ship checklist, and project report
+wiki/         Architecture, decisions, and implementation patterns
+screenshots/  Desktop and mobile product screenshots
+slides/       Marp presentation source and exported PDF
 ```
-url-shortener-api/
-├── src/
-│   ├── main.py         → Main FastAPI application (app init, middleware, static files)
-│   ├── routers/        → API endpoint modules
-│   │   ├── auth.py     → Authentication routes
-│   │   ├── admin.py    → Admin user management
-│   │   ├── profiles.py → Profile and link tree routes
-│   │   ├── links.py    → URL shortening and analytics routes
-│   │   └── redirects.py→ Core redirect routes
-│   ├── schemas.py      → Pydantic models for validation
-│   ├── dependencies.py → Auth logic, rate limiting, and dependencies
-│   ├── config.py       → Environment variable loading
-│   ├── database.py     → PostgreSQL + SQLite connection management
-│   ├── analytics.py    → Background task for analytics flush
-│   └── utils.py        → Helper utilities
-├── docs/
-│   ├── SPEC.md         → Project specification
-│   ├── PLAN.md         → Implementation plan
-│   └── SHIP.md         → Deployment checklist
-├── wiki/               → Architecture and pattern documentation
-├── screenshots/        → Project screenshots and assets
-├── slides/             → Presentation materials
-├── tests/
-│   ├── conftest.py     → Test fixtures
-│   ├── test_shorten.py → Shorten endpoint tests
-│   └── test_redirect.py → Redirect endpoint tests
-├── static/
-│   ├── index.html      → Frontend UI
-│   ├── script.js       → Frontend logic
-│   └── style.css       → Glassmorphism styles
-└── .env.example        → Environment variable template
-```
+
+## Contributing
+
+Issues and pull requests are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before submitting a change. Please keep changes scoped, include tests for behavior changes, update relevant docs and screenshots, and run the full verification suite.
+
+For security problems, follow [`SECURITY.md`](SECURITY.md) instead of opening a public issue.
 
 ## License
 
-MIT
+Swoosh is available under the [MIT License](LICENSE).

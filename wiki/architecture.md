@@ -18,7 +18,7 @@ The frontend is built without heavy frameworks (React, Vue) to prioritize speed,
 
 ### Core Files
 - **`index.html`**: The main shell. It contains the raw HTML structure for all views (Login, Feature Selection, Profile Creation, Dashboard, Link Tree).
-- **`style.css`**: Utilizes CSS variables for **Adaptive Theming** (Dark/Light mode via `@media (prefers-color-scheme)`). Implements a responsive layout featuring a **Desktop Sidebar** and a **Mobile Floating Dock**.
+- **`style.css`**: Utilizes CSS variables for **Adaptive Theming** (Dark/Light mode via `@media (prefers-color-scheme)`). Implements a responsive layout featuring a **Desktop Sidebar** and a **Sticky Mobile Top Navigation**. Olive Ink (`#2F3A1D`) provides the brand surfaces and Warm Lime (`#CFFF74`) marks primary actions and active states.
 - **`script.js`**: The core controller.
 
 ### View Routing Mechanism
@@ -29,7 +29,7 @@ The frontend uses a simple CSS-class based routing mechanism.
 
 ### State Management & Auth
 - **`swoosh_token`**: Stored in `localStorage`. Contains the JWT string for API authentication.
-- **`swoosh_active_profile`**: Stored in `localStorage`. Tracks whether the user is currently managing a specific Link Tree profile or operating in "Standalone Mode".
+- **`swoosh_active_profile`**: Stored in `localStorage`. Tracks which of the account's Link Tree profiles is currently selected. The profile chooser allows switching among up to five profiles; Standalone Mode remains separate.
 
 ## 3. Backend Architecture (FastAPI)
 
@@ -61,13 +61,13 @@ erDiagram
     USERS ||--o{ LINKS : creates
     PROFILES ||--o{ LINKS : displays
     LINKS ||--o{ DAILY_STATS : aggregates
-    
+
     USERS {
         int id PK
         string username
         string password_hash
     }
-    
+
     PROFILES {
         int id PK
         int user_id FK
@@ -78,7 +78,7 @@ erDiagram
         string avatar_url
         string avatar_object_key
     }
-    
+
     LINKS {
         int id PK
         int user_id FK

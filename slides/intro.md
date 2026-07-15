@@ -5,78 +5,42 @@ paginate: true
 ---
 
 # Swoosh
-### A Production-Hardened URL Shortener
+## URL shortener and link-in-bio builder
 
 **Live:** https://swoo-sh.onrender.com
 
-Built with FastAPI + Neon PostgreSQL
-Hardened with validation, rate limiting, security headers, and tests.
-Developed using spec-driven workflows.
+Swoosh creates trackable short URLs and public Link Tree profiles from one self-hosted application.
 
 ---
 
-# Why Swoosh?
+# What users can do
 
-**Problem:** Long URLs are ugly, break in chats, and hide analytics.
-
-**Solution:** Short, custom, trackable links with a clean glassmorphism UI.
-
-**What makes it production-ready:**
-- Multi-User JWT Authentication (Registration & Login)
-- Link Trees (Public Profiles) & Standalone Links
-- Input validation (Pydantic)
-- Rate limiting (30 req/min per IP)
-- Security headers on every response
-- Structured JSON errors
-- URL deduplication
-- Click tracking + full link lifecycle management
+- Sign in with an administrator-created account.
+- Create standalone short links with optional custom codes.
+- Create and switch among up to five public Link Tree profiles.
+- Add a bio, avatar, and social or website links.
+- Share a public URL or locally generated QR code.
+- Review short-link clicks and Link Tree visits separately.
 
 ---
 
-# How I Built It
+# Technical foundation
 
-**Workflow:** Spec → Plan → Build → Review → Ship
-
-| Step | Tool | What happened |
-|------|------|---------------|
-| Spec | Claude | Wrote structured requirements doc |
-| Plan | Claude | Broke into steps and iterated for Multi-User/Trees |
-| Build | Claude | Modular architecture with modular routers |
-| DB   | MCP | Live DB inspection during dev |
-| API  | Skill | Enforced API consistency across routers |
-| Test | Agent | Autonomously verified endpoints |
+- FastAPI and Python 3.11
+- Vanilla HTML, CSS, and JavaScript
+- SQLite locally and Neon PostgreSQL in production
+- Cloudinary avatar storage
+- JWT authentication and bcrypt password hashing
+- Rate limiting, validation, migrations, and security headers
 
 ---
 
-# Architecture
+# Delivery status
 
-```text
-Browser → FastAPI (Render) → Neon PostgreSQL
-              │
-        ┌─────┴─────┐
-        │ Rate Limit │  30 req/min per IP
-        │ Validation │  Pydantic validators
-        │ Security   │  Anti-XSS, anti-clickjacking
-        └───────────┘
-```
-
-**Endpoints:**
-- `POST /api/shorten` — create short URL (dedup + rate limit)
-- `GET /<code>` — 302 redirect + click tracking
-- `GET /api/links` — list all saved links
-- `DELETE /api/links/<code>` — remove a link
-
----
-
-# Next Steps
-
-✅ Deployed — live on Render + Neon PostgreSQL
-
-**Coming up next:**
-- Add user authentication for personal link management
-- Add geographic analytics (clicks by country)
-- Custom domain with HTTPS
+- Responsive desktop sidebar and mobile top navigation
+- Olive Ink and Warm Lime brand system
+- 73 local tests passing; one optional PostgreSQL test skipped
+- Deployed on Render
+- Open source under the MIT License
 
 **GitHub:** github.com/ahk1542001-wq/url-shortener-api
-
-**Thank you!** ⭐
