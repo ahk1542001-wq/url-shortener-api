@@ -1,8 +1,9 @@
 import json
 import io
-import boto3
 import uuid
 import logging
+import cloudinary
+import cloudinary.uploader
 from PIL import Image
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 
@@ -14,24 +15,22 @@ from src import config
 logger = logging.getLogger(__name__)
 
 
-def get_r2_client():
+def configure_cloudinary():
     if not all(
         [
-            config.R2_ENDPOINT,
-            config.R2_ACCESS_KEY_ID,
-            config.R2_SECRET_ACCESS_KEY,
-            config.R2_BUCKET,
-            config.R2_PUBLIC_BASE_URL,
+            config.CLOUDINARY_CLOUD_NAME,
+            config.CLOUDINARY_API_KEY,
+            config.CLOUDINARY_API_SECRET,
         ]
     ):
-        return None
-    return boto3.client(
-        "s3",
-        endpoint_url=config.R2_ENDPOINT,
-        aws_access_key_id=config.R2_ACCESS_KEY_ID,
-        aws_secret_access_key=config.R2_SECRET_ACCESS_KEY,
-        region_name="auto",
+        return False
+    cloudinary.config(
+        cloud_name=config.CLOUDINARY_CLOUD_NAME,
+        api_key=config.CLOUDINARY_API_KEY,
+        api_secret=config.CLOUDINARY_API_SECRET,
+        secure=True,
     )
+    return True
 
 
 router = APIRouter(prefix="/api")
@@ -190,23 +189,32 @@ def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_current
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid image file.")
 
-    r2 = get_r2_client()
-    if not r2:
+    if not configure_cloudinary():
         raise HTTPException(status_code=500, detail="Cloud storage not configured.")
 
-    object_key = f"avatars/{uuid.uuid4()}.jpg"
+    public_id = f"avatars/{uuid.uuid4()}"
 
     try:
-        r2.upload_fileobj(
+        upload_result = cloudinary.uploader.upload(
             out_bytes,
-            config.R2_BUCKET,
-            object_key,
-            ExtraArgs={"ContentType": "image/jpeg"},
+            public_id=public_id,
+            resource_type="image",
+            format="jpg",
+            overwrite=False,
         )
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to upload image.")
 
-    avatar_url = f"{config.R2_PUBLIC_BASE_URL}/{object_key}"
+    avatar_url = upload_result.get("secure_url")
+    stored_public_id = upload_result.get("public_id")
+    if not avatar_url or not stored_public_id:
+        try:
+            cloudinary.uploader.destroy(
+                public_id, resource_type="image", invalidate=True
+            )
+        except Exception:
+            logger.exception("Failed to clean up an invalid Cloudinary upload")
+        raise HTTPException(status_code=500, detail="Failed to upload image.")
 
     # DB update
     old_key = None
@@ -222,23 +230,24 @@ def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_current
 
             c.execute(
                 f"UPDATE profiles SET avatar_url = {P}, avatar_object_key = {P} WHERE id = {P}",
-                (avatar_url, object_key, prof["id"]),
+                (avatar_url, stored_public_id, prof["id"]),
             )
     except Exception:
-        # DB failed, rollback R2 upload
+        # DB failed, roll back the Cloudinary upload.
         try:
-            r2.delete_object(Bucket=config.R2_BUCKET, Key=object_key)
+            cloudinary.uploader.destroy(
+                stored_public_id, resource_type="image", invalidate=True
+            )
         except Exception:
-            pass
+            logger.exception("Failed to roll back Cloudinary avatar upload")
         raise HTTPException(status_code=500, detail="Database update failed.")
 
     # Success, now try to delete old object
     if old_key:
         try:
-            r2.delete_object(Bucket=config.R2_BUCKET, Key=old_key)
+            cloudinary.uploader.destroy(old_key, resource_type="image", invalidate=True)
         except Exception:
-            # Log failure but do not fail the request
-            logger.error(f"Failed to delete old avatar {old_key}")
+            logger.exception("Failed to delete old Cloudinary avatar %s", old_key)
 
     return {"message": "Avatar uploaded successfully", "avatar_url": avatar_url}
 

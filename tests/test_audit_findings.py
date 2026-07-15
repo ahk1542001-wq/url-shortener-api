@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import io
+import uuid
 import sqlite3
 import subprocess
 import pytest
@@ -82,20 +83,18 @@ def test_config_admin_hash_missing():
     assert "ADMIN_PASSWORD_HASH must be explicitly set" in res.stderr
 
 
-def test_config_r2_partial():
-    # Only endpoint configured
+def test_config_cloudinary_partial():
+    # Only the cloud name is configured.
     res = run_config_check(
         {
-            "R2_ENDPOINT": "http://localhost:9000",
-            "R2_ACCESS_KEY_ID": "",
-            "R2_SECRET_ACCESS_KEY": "",
-            "R2_BUCKET": "",
-            "R2_PUBLIC_BASE_URL": "",
+            "CLOUDINARY_CLOUD_NAME": "test-cloud",
+            "CLOUDINARY_API_KEY": "",
+            "CLOUDINARY_API_SECRET": "",
         }
     )
     assert res.returncode != 0
     assert "ValueError" in res.stderr
-    assert "All R2 configuration variables" in res.stderr
+    assert "All Cloudinary configuration variables" in res.stderr
 
 
 # 2. SQLite Foreign Key Enforcement Test
@@ -340,17 +339,22 @@ def test_sqlite_migration_both_tables_merge(tmp_path):
     conn.close()
 
 
-# 4. R2 Upload Lifecycle Tests
+# 4. Cloudinary Upload Lifecycle Tests
 @pytest.fixture
-def mock_r2():
-    with patch("src.routers.profiles.get_r2_client") as m:
-        client = MagicMock()
-        m.return_value = client
-        yield client
+def mock_cloudinary(monkeypatch):
+    monkeypatch.setattr(config, "CLOUDINARY_CLOUD_NAME", "test-cloud")
+    monkeypatch.setattr(config, "CLOUDINARY_API_KEY", "test-key")
+    monkeypatch.setattr(config, "CLOUDINARY_API_SECRET", "test-secret")
+    with patch("src.routers.profiles.cloudinary.uploader") as uploader:
+        uploader.upload.return_value = {
+            "secure_url": "https://res.cloudinary.com/test-cloud/image/upload/avatars/new-avatar.jpg",
+            "public_id": "avatars/new-avatar",
+        }
+        yield uploader
 
 
-def test_avatar_upload_r2_failure(mock_r2, auth_client):
-    mock_r2.upload_fileobj.side_effect = Exception("Upload to R2 failed")
+def test_avatar_upload_cloudinary_failure(mock_cloudinary, auth_client):
+    mock_cloudinary.upload.side_effect = Exception("Upload to Cloudinary failed")
 
     # Get current DB state
     with get_db() as conn:
@@ -386,9 +390,7 @@ def test_avatar_upload_r2_failure(mock_r2, auth_client):
         assert after_row == before_row
 
 
-def test_avatar_upload_db_failure_rollback(mock_r2, auth_client):
-    mock_r2.upload_fileobj.return_value = True
-
+def test_avatar_upload_db_failure_rollback(mock_cloudinary, auth_client):
     # Get current DB state
     with get_db() as conn:
         c = conn.cursor()
@@ -420,8 +422,10 @@ def test_avatar_upload_db_failure_rollback(mock_r2, auth_client):
             assert response.status_code == 500
             assert "Database update failed" in response.json()["error"]["message"]
 
-            # Verify R2 uploaded file was deleted/rolled back
-            mock_r2.delete_object.assert_called_once()
+            # Verify the Cloudinary upload was deleted during rollback.
+            mock_cloudinary.destroy.assert_called_once_with(
+                "avatars/new-avatar", resource_type="image", invalidate=True
+            )
 
     # Verify DB was unchanged after rollback
     with get_db() as conn:
@@ -433,14 +437,11 @@ def test_avatar_upload_db_failure_rollback(mock_r2, auth_client):
         assert after_row == before_row
 
 
-def test_avatar_upload_success_delete_old(mock_r2, auth_client):
-    mock_r2.upload_fileobj.return_value = True
-    mock_r2.delete_object.return_value = True
-
+def test_avatar_upload_success_delete_old(mock_cloudinary, auth_client):
     # Pre-populate database with an old avatar object key
     with get_db() as conn:
         conn.execute(
-            "UPDATE profiles SET avatar_object_key = 'old-avatar-key.jpg' WHERE username = 'admin'"
+            "UPDATE profiles SET avatar_object_key = 'avatars/old-avatar' WHERE username = 'admin'"
         )
         conn.commit()
 
@@ -458,20 +459,22 @@ def test_avatar_upload_success_delete_old(mock_r2, auth_client):
         )
         assert response.status_code == 200
 
-        # Verify old avatar was deleted
-        mock_r2.delete_object.assert_called_with(
-            Bucket=config.R2_BUCKET, Key="old-avatar-key.jpg"
+        # Verify UUID-based public IDs and deletion of the old avatar.
+        generated_public_id = mock_cloudinary.upload.call_args.kwargs["public_id"]
+        assert generated_public_id.startswith("avatars/")
+        uuid.UUID(generated_public_id.removeprefix("avatars/"))
+        mock_cloudinary.destroy.assert_called_with(
+            "avatars/old-avatar", resource_type="image", invalidate=True
         )
 
 
-def test_avatar_upload_delete_old_fail_logged(mock_r2, auth_client):
-    mock_r2.upload_fileobj.return_value = True
+def test_avatar_upload_delete_old_fail_logged(mock_cloudinary, auth_client):
     # Raise exception when deleting old object
-    mock_r2.delete_object.side_effect = Exception("Deletion failed")
+    mock_cloudinary.destroy.side_effect = Exception("Deletion failed")
 
     with get_db() as conn:
         conn.execute(
-            "UPDATE profiles SET avatar_object_key = 'old-avatar-key.jpg' WHERE username = 'admin'"
+            "UPDATE profiles SET avatar_object_key = 'avatars/old-avatar' WHERE username = 'admin'"
         )
         conn.commit()
 
@@ -490,7 +493,9 @@ def test_avatar_upload_delete_old_fail_logged(mock_r2, auth_client):
             )
             # Request should still succeed
             assert response.status_code == 200
-            mock_logger.error.assert_called_once()
+            mock_logger.exception.assert_called_once_with(
+                "Failed to delete old Cloudinary avatar %s", "avatars/old-avatar"
+            )
 
 
 # 5. JWT Expiry Test

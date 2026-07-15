@@ -32,7 +32,7 @@ Headers: { "Authorization": "Bearer <token>" }
 Input: { "url": "https://example.com/very/long/path", "custom_code": "optional-custom" }
 Output: { "short_code": "aB3dE", "original_url": "https://example.com/..." }
 
-# Upload Avatar (R2)
+# Upload Avatar (Cloudinary)
 POST /api/profiles/avatar
 Headers: { "Authorization": "Bearer <token>" }
 Input: multipart/form-data with file
@@ -73,4 +73,4 @@ After designing or modifying the API:
 - [ ] Error responses follow a single consistent format.
 - [ ] Validation happens at system boundaries only.
 - [ ] The database is securely accessed and properly increments clicks.
-- [ ] Avatar files are validated (under 2MB, valid format) before uploading to R2.
+- [ ] Avatar files are validated (under 2MB, valid format) before uploading to Cloudinary.

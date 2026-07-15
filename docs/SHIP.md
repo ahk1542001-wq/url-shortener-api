@@ -55,7 +55,7 @@
 | Multi-User Auth | Working (JWT token, user registration, centralized auth helper) |
 | XSS protection | Working (escapeHtml on all user content in innerHTML) |
 | Link Trees | Working (Multiple public profiles per user) |
-| Link Tree Avatars | Working (Image upload to Cloudflare R2) |
+| Link Tree Avatars | Working (Image upload to Cloudinary) |
 | Copy short URLs | One-click copy in My Links with ✅ feedback |
 | Standalone mode | Working (Links without a profile) |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
@@ -63,7 +63,7 @@
 
 ## Deployment & Rehearsal
 
-**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database) + Cloudflare R2 (avatar storage)
+**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database) + Cloudinary (avatar storage)
 
 **Live at:** https://swoo-sh.onrender.com
 
@@ -81,7 +81,7 @@
 
 ### How to Deploy
 1. Create a free Neon database at [neon.tech](https://neon.tech) → copy connection string
-2. Create a Cloudflare R2 bucket → obtain endpoint, credentials, and public dev domain
+2. Create a free Cloudinary account → obtain cloud name, API key, and API secret
 3. Go to [render.com](https://render.com) → New Web Service → connect GitHub repo
 4. Set runtime to Docker (uses the Dockerfile in the repository root)
 5. Add env vars in Render dashboard:
@@ -89,11 +89,9 @@
    - `RATE_LIMIT` = `30/minute`
    - `JWT_SECRET` = choose a secure secret string (min 32 characters, generated with `openssl rand -hex 32`)
    - `ADMIN_PASSWORD_HASH` = bcrypt hash of your admin password
-   - `R2_ENDPOINT` = Cloudflare R2 S3 Endpoint
-   - `R2_ACCESS_KEY_ID` = Cloudflare R2 Access Key ID
-   - `R2_SECRET_ACCESS_KEY` = Cloudflare R2 Secret Access Key
-   - `R2_BUCKET` = Cloudflare R2 Bucket Name
-   - `R2_PUBLIC_BASE_URL` = Cloudflare R2 Public Base URL
+   - `CLOUDINARY_CLOUD_NAME` = Cloudinary cloud name
+   - `CLOUDINARY_API_KEY` = Cloudinary API key
+   - `CLOUDINARY_API_SECRET` = Cloudinary API secret
 6. Select Free instance → Deploy
 
 ### Rollback

@@ -64,7 +64,7 @@ Browser → FastAPI (Render) → Neon PostgreSQL
 **Endpoints:**
 - `POST /api/login` — User authentication (JWT)
 - `POST /api/admin/register` — Admin-created accounts
-- `POST /api/profiles/avatar` — Upload avatar to Cloudflare R2
+- `POST /api/profiles/avatar` — Upload avatar to Cloudinary
 - `POST /api/profiles` — Create link tree profiles
 - `GET /api/links` — list all saved links
 - `DELETE /api/links/<code>` — remove a link
@@ -80,7 +80,7 @@ Browser → FastAPI (Render) → Neon PostgreSQL
 | Features | Single User | Multi-User Auth + Link Trees |
 | Rate limiting | None | 30/min on POST via slowapi |
 | Password | Single password | Multi-User JWT Auth (Admin-Created) |
-| Database | SQLite only | SQLite/PostgreSQL Migrations + R2 |
+| Database | SQLite only | SQLite/PostgreSQL Migrations + Cloudinary avatars |
 | Config | Hardcoded | .env-driven + startup checks |
 | Tests | None | Full audit test suite passing |
 | Security | None | Headers, Rate limit, Secure secrets validation |
