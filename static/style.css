@@ -327,6 +327,39 @@ button:disabled {
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
+.admin-action-btn {
+    width: auto;
+    margin: 0;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--brand-green-light);
+    border-radius: 8px;
+    background: var(--brand-green-gradient);
+    color: #FFFFFF;
+    white-space: nowrap;
+    box-shadow: 0 5px 14px rgba(43, 89, 69, 0.24);
+}
+
+.admin-action-btn:hover:not(:disabled) {
+    background: var(--brand-green-light);
+    color: #FFFFFF;
+    box-shadow: 0 7px 18px rgba(43, 89, 69, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+    .admin-action-btn {
+        border-color: #6EE7B7;
+        background: var(--accent);
+        color: #022C22;
+        box-shadow: 0 5px 16px rgba(16, 185, 129, 0.28);
+    }
+
+    .admin-action-btn:hover:not(:disabled) {
+        background: #34D399;
+        color: #022C22;
+        box-shadow: 0 7px 20px rgba(16, 185, 129, 0.36);
+    }
+}
+
 /* Loading State */
 .loading-container {
     display: none;
