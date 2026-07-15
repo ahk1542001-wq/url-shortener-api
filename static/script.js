@@ -25,19 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Link Form Elements ---
     const form = document.getElementById('shorten-form');
     const urlInput = document.getElementById('url');
-    const titleInput = document.getElementById('title');
     const customCodeInput = document.getElementById('custom_code');
-    const showOnTreeCheck = document.getElementById('show_on_tree');
-    const titleGroup = document.getElementById('title-group');
+    const linkModeInput = document.getElementById('link-mode'); // Not used anymore but keep for now
     const submitBtn = document.getElementById('submit-btn');
     const btnText = submitBtn.querySelector('span');
     const loadingContainer = document.getElementById('loading-container');
     const loadingText = document.getElementById('loading-text');
 
-    // Toggle title field visibility based on checkbox
-    showOnTreeCheck.addEventListener('change', () => {
-        titleGroup.style.display = showOnTreeCheck.checked ? 'block' : 'none';
-    });
+    const showOnTreeCheck = document.getElementById('show_on_tree');
 
     const errorMsg = document.getElementById('error-message');
     const resultSection = document.getElementById('result-section');
@@ -51,8 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editModal = document.getElementById('edit-modal');
     const editForm = document.getElementById('edit-form');
     const editUrlInput = document.getElementById('edit-url');
-    const editTitleInput = document.getElementById('edit-title');
-    const editShowTreeCheck = document.getElementById('edit-show-tree');
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     let currentEditCode = null;
 
@@ -70,10 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        
+
         const icon = type === 'success' ? '✨' : '⚠️';
         toast.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span> <span>${escapeHtml(message)}</span>`;
-        
+
         container.appendChild(toast);
         setTimeout(() => toast.classList.add('show'), 10);
         setTimeout(() => {
@@ -118,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const createProfileView = document.getElementById('create-profile-view');
     const adminView = document.getElementById('admin-view');
     const adminCreateUserView = document.getElementById('admin-create-user-view');
-    
+
     let isStandaloneMode = false;
 
     function hideAllViews() {
@@ -138,6 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
         landingView.classList.remove('hidden');
         navLoginBtn.classList.remove('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
     }
 
     function showLogin() {
@@ -145,6 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loginView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
+
         if (usernameInput) usernameInput.value = '';
         passwordInput.value = '';
         passwordError.classList.add('hidden');
@@ -157,6 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(featureSelectionView) featureSelectionView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'block';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'flex';
     }
 
     function showDashboard() {
@@ -169,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mainDock) mainDock.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
 
         if (isStandaloneMode) {
             document.querySelector('.dock-btn[data-tab="tree"]')?.classList.add('hidden');
@@ -183,6 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('switch-profile-btn')?.classList.remove('hidden');
             document.getElementById('sidebar-switch-profile')?.classList.remove('hidden');
             document.getElementById('show-on-tree-container')?.classList.remove('hidden');
+
+            const defaultTab = localStorage.getItem('swoosh_default_tab');
+            if (defaultTab && typeof switchTab === 'function') {
+                switchTab(defaultTab);
+                localStorage.removeItem('swoosh_default_tab');
+            }
         }
 
         loadDashboardData();
@@ -195,29 +203,37 @@ document.addEventListener('DOMContentLoaded', () => {
         profileSelectionView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
         loadProfiles();
     }
-    
+
     function showCreateProfile() {
         hideAllViews();
         createProfileView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
     }
-    
+
     function showAdminDashboard() {
         hideAllViews();
         adminView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
         loadAdminUsers();
     }
-    
+
     function showAdminCreateUser() {
         hideAllViews();
         adminCreateUserView.classList.remove('hidden');
         navLoginBtn.classList.add('hidden');
         headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
     }
 
     if (document.getElementById('admin-add-user-btn')) {
@@ -226,7 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('admin-cancel-user-btn')) {
         document.getElementById('admin-cancel-user-btn').addEventListener('click', showAdminDashboard);
     }
-    
+    if (document.getElementById('nav-admin-back')) {
+        document.getElementById('nav-admin-back').addEventListener('click', showAdminDashboard);
+    }
+
     const adminLogoutLinks = document.querySelectorAll('.logout-link');
     adminLogoutLinks.forEach(link => {
         link.addEventListener('click', (e) => {
@@ -240,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const un = document.getElementById('new-user-username').value.trim();
             const pw = document.getElementById('new-user-password').value.trim();
-            
+
             try {
                 const r = await fetch('/api/admin/users', {
                     method: 'POST',
@@ -250,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (handle401(r)) return;
                 const data = await r.json();
                 if(!r.ok) throw new Error(data.detail || data.error?.message || 'Failed to create user');
-                
+
                 showToast('User created successfully', 'success');
                 showAdminDashboard();
             } catch (err) {
@@ -269,12 +288,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (handle401(r)) return;
             const data = await r.json();
             if (!r.ok) throw new Error('Failed to fetch users');
-            
+
             if (data.users.length === 0) {
                 list.innerHTML = '<p class="text-muted text-center">No users found.</p>';
                 return;
             }
-            
+
             list.innerHTML = data.users.map(u => `
                 <div class="link-item" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -287,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML = '<p class="text-muted text-center">Error loading users</p>';
         }
     }
-    
+
     document.getElementById('switch-profile-btn').addEventListener('click', () => {
         localStorage.removeItem('swoosh_active_profile');
         showProfileSelection();
@@ -300,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
             logoutBtn.click();
         });
     }
-    
+
     document.getElementById('add-profile-btn').addEventListener('click', showCreateProfile);
     document.getElementById('cancel-create-profile-btn').addEventListener('click', () => {
         if(window.appProfiles && window.appProfiles.length > 0) showProfileSelection();
@@ -316,6 +335,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('select-tree-feature')?.addEventListener('click', () => {
         isStandaloneMode = false;
+        // Ensure default tab is tree when dashboard loads
+        localStorage.setItem('swoosh_default_tab', 'tree');
         showProfileSelection();
     });
 
@@ -332,13 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         logoutBtn.click();
     });
-    
+
     // Create Profile Form
     document.getElementById('create-profile-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('new-profile-username').value.trim();
         if(!username) return;
-        
+
         try {
             const r = await fetch('/api/profiles', {
                 method: 'POST',
@@ -348,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (handle401(r)) return;
             const data = await r.json();
             if(!r.ok) throw new Error(data.detail || data.error?.message || 'Failed to create profile');
-            
+
             showToast('Profile created successfully', 'success');
             localStorage.setItem('swoosh_active_profile', username);
             showDashboard();
@@ -358,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
             errDiv.classList.remove('hidden');
         }
     });
-    
+
     async function loadProfiles() {
         const grid = document.getElementById('profiles-grid');
         grid.innerHTML = '<p class="text-muted">Loading profiles...</p>';
@@ -370,14 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (handle401(r)) return;
             const data = await r.json();
             if (!r.ok) throw new Error('Failed to fetch profiles');
-            
+
             window.appProfiles = data.profiles;
-            
+
             if (data.profiles.length === 0) {
                 showCreateProfile();
                 return;
             }
-            
+
             if (data.profiles.length >= 5) {
                 document.getElementById('add-profile-btn').style.display = 'none';
                 const limitMsg = document.createElement('p');
@@ -388,21 +409,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 document.getElementById('add-profile-btn').style.display = 'inline-block';
             }
-            
+
             grid.innerHTML = data.profiles.map(p => `
                 <div class="profile-card" data-username="${escapeHtml(p.username)}">
                     <div class="profile-avatar">${escapeHtml(p.username.charAt(0).toUpperCase())}</div>
                     <div class="profile-name">${escapeHtml(p.username)}</div>
                 </div>
             `).join('');
-            
+
             document.querySelectorAll('.profile-card').forEach(card => {
                 card.addEventListener('click', () => {
                     localStorage.setItem('swoosh_active_profile', card.dataset.username);
                     showDashboard();
                 });
             });
-            
+
         } catch (err) {
             console.error(err);
             grid.innerHTML = '<p class="text-muted">Error loading profiles</p>';
@@ -418,12 +439,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if(sidebarBackFeatures) sidebarBackFeatures.addEventListener('click', () => {
         document.getElementById('back-features-dock-btn')?.click();
     });
-    
+
     const sidebarSwitchProfile = document.getElementById('sidebar-switch-profile');
     if(sidebarSwitchProfile) sidebarSwitchProfile.addEventListener('click', () => {
         document.getElementById('switch-profile-btn')?.click();
     });
-    
+
     const sidebarLogout = document.getElementById('sidebar-logout');
     if(sidebarLogout) sidebarLogout.addEventListener('click', () => {
         document.getElementById('logout-btn')?.click();
@@ -431,11 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Tabs Logic ---
     const allTabBtns = document.querySelectorAll('.dock-btn[data-tab], .sidebar-btn[data-tab]');
-    
+
     function switchTab(tabId) {
         allTabBtns.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => c.classList.add('hidden'));
-        
+
         document.querySelectorAll(`.dock-btn[data-tab="${tabId}"], .sidebar-btn[data-tab="${tabId}"]`).forEach(b => b.classList.add('active'));
         const targetId = `tab-${tabId}`;
         const targetEl = document.getElementById(targetId);
@@ -475,14 +496,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Server connection failed', 'error');
                 return;
             }
-            
+
             const data = await r.json();
 
             localStorage.setItem('swoosh_token', data.token);
             localStorage.setItem('swoosh_role', data.role);
             localStorage.removeItem('swoosh_active_profile'); // Clear previous profile on login
             showToast('Authentication successful', 'success');
-            
+
             if (data.role === 'admin') {
                 showAdminDashboard();
             } else {
@@ -531,35 +552,49 @@ document.addEventListener('DOMContentLoaded', () => {
             if (handle401(r)) return;
             if (!r.ok) throw new Error('Failed to load profile data');
             const data = await r.json();
-            
+
             currentUsername = data.username;
-            
+
             const myTreeUrl = `${window.location.origin}/u/${data.username}`;
             const myTreeLink = document.getElementById('my-tree-url');
             myTreeLink.href = myTreeUrl;
             myTreeLink.textContent = `swoo.sh/u/${data.username}`;
-            
+
             document.getElementById('view-tree-btn').href = myTreeUrl;
             document.getElementById('tree-views-count').textContent = data.tree_views;
-            
+
             // Populate profile form
             document.getElementById('profile-username').value = data.username;
             if (data.bio) {
                 document.getElementById('profile-bio').value = data.bio;
             }
-            
+
+            const avatarPreview = document.getElementById('avatar-preview');
+            const avatarPlaceholder = document.getElementById('avatar-placeholder');
+            if (data.avatar_url) {
+                avatarPreview.src = data.avatar_url;
+                avatarPreview.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+            } else {
+                avatarPreview.style.display = 'none';
+                avatarPlaceholder.style.display = 'block';
+            }
+
             // Populate Social Links
             const socialContainer = document.getElementById('social-links-list');
             socialContainer.innerHTML = '';
             if (data.social_links && data.social_links.length > 0) {
                 data.social_links.forEach(link => {
-                    renderSocialLinkRow(link.platform, link.url);
+                    renderSocialLinkRow(link.platform, link.url, link.title);
                 });
+            } else {
+                // Add one empty row by default
+                renderSocialLinkRow();
             }
-            
+
             // Generate QR Code
             generateQRCode(myTreeUrl);
-            
+
             document.getElementById('copy-tree-btn').onclick = () => {
                 navigator.clipboard.writeText(myTreeUrl).then(() => {
                     showToast('Link Tree URL copied', 'success');
@@ -614,22 +649,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Avatar Upload Logic ---
+    const avatarUpload = document.getElementById('avatar-upload');
+    if (avatarUpload) {
+        avatarUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const statusLabel = document.getElementById('avatar-upload-status');
+            statusLabel.textContent = 'Uploading...';
+            statusLabel.style.display = 'block';
+            statusLabel.style.color = 'var(--accent)';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/profiles/avatar', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('swoosh_token')}`, 'X-Active-Profile': localStorage.getItem('swoosh_active_profile') || '' },
+                    body: formData
+                });
+
+                if (handle401(res)) return;
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || 'Upload failed');
+                }
+
+                const avatarPreview = document.getElementById('avatar-profile');
+                if (avatarPreview) avatarPreview.src = data.avatar_url;
+
+                statusLabel.textContent = 'Upload successful!';
+                statusLabel.style.color = 'green';
+
+                // Immediately show preview
+                document.getElementById('avatar-preview').src = data.avatar_url;
+                document.getElementById('avatar-preview').style.display = 'block';
+                document.getElementById('avatar-placeholder').style.display = 'none';
+
+                setTimeout(() => { statusLabel.style.display = 'none'; }, 3000);
+            } catch (err) {
+                console.error(err);
+                statusLabel.textContent = err.message;
+                statusLabel.style.color = 'red';
+            }
+        });
+    }
+
     // --- Social Links UI ---
-    function renderSocialLinkRow(platform = 'twitter', url = '') {
+    function renderSocialLinkRow(platform = 'website', url = '', title = '') {
         const container = document.getElementById('social-links-list');
         const row = document.createElement('div');
         row.style.display = 'flex';
         row.style.gap = '0.5rem';
         row.style.alignItems = 'center';
-        
+
         const select = document.createElement('select');
         select.style.padding = '0.6rem';
         select.style.borderRadius = '8px';
         select.style.border = '1px solid #E7E5E4';
         select.style.background = '#FFFFFF';
         select.className = 'social-platform-select';
-        
-        const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'website', 'other'];
+
+        const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'facebook', 'youtube', 'tiktok', 'website', 'other'];
         platforms.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p;
@@ -637,13 +721,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (p === platform) opt.selected = true;
             select.appendChild(opt);
         });
-        
+
         const input = document.createElement('input');
-        input.type = 'url';
-        input.placeholder = 'https://...';
-        input.value = url;
+        input.type = 'text';
+        input.placeholder = 'URL';
+        input.value = url || '';
         input.className = 'social-url-input';
-        
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.placeholder = 'Custom Title (Optional)';
+        titleInput.value = title || '';
+        titleInput.className = 'social-title-input';
+        titleInput.style.flex = '1';
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'icon-btn';
@@ -651,11 +742,12 @@ document.addEventListener('DOMContentLoaded', () => {
         removeBtn.innerHTML = '✕';
         removeBtn.title = 'Remove link';
         removeBtn.onclick = () => row.remove();
-        
+
         row.appendChild(select);
+        row.appendChild(titleInput);
         row.appendChild(input);
         row.appendChild(removeBtn);
-        
+
         container.appendChild(row);
     }
 
@@ -677,8 +769,9 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let row of socialRows) {
             const p = row.querySelector('.social-platform-select').value;
             const u = row.querySelector('.social-url-input').value.trim();
-            if (u) {
-                newSocialLinks.push({ platform: p, url: u });
+            const t = row.querySelector('.social-title-input').value.trim();
+            if (p && u) {
+                newSocialLinks.push({ platform: p, url: u, title: t });
             }
         }
 
@@ -702,8 +795,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const r = await fetch('/api/me', {
                 method: 'PUT',
                 headers: headers(),
-                body: JSON.stringify({ 
-                    username: newUsername, 
+                body: JSON.stringify({
+                    username: newUsername,
                     bio: newBio || null,
                     social_links: newSocialLinks.length > 0 ? newSocialLinks : null
                 })
@@ -711,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (handle401(r)) return;
             const data = await r.json();
-            
+
             if (!r.ok) {
                 throw new Error(data.error?.message || data.detail || 'Failed to update profile');
             }
@@ -725,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
             myTreeLink.href = newTreeUrl;
             myTreeLink.textContent = `swoo.sh/u/${data.username}`;
             document.getElementById('view-tree-btn').href = newTreeUrl;
-            
+
             generateQRCode(newTreeUrl);
 
             showToast('Profile updated successfully!', 'success');
@@ -764,9 +857,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lastAccessed = link.last_accessed === 'Never'
                     ? 'Unvisited'
                     : new Date(link.last_accessed + 'Z').toLocaleDateString();
-                    
+
                 const treeBadge = link.show_on_tree ? `<span style="font-size: 0.7rem; background: var(--accent-glow); color: var(--accent); padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 0.5rem;">On Tree</span>` : '';
-                const displayTitle = link.title || escapeHtml(link.original_url);
+                const displayTitle = escapeHtml(link.original_url);
 
                 return `
                     <div class="link-item">
@@ -782,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="copy-link-btn" data-code="${escapeHtml(link.short_code)}" title="Copy Link">
                                 ${copyIconSVG}
                             </button>
-                            <button class="edit-btn" data-code="${escapeHtml(link.short_code)}" data-url="${escapeHtml(link.original_url)}" data-title="${escapeHtml(link.title || '')}" data-tree="${link.show_on_tree}" title="Edit">
+                            <button class="edit-btn" data-code="${escapeHtml(link.short_code)}" data-url="${escapeHtml(link.original_url)}" data-title="${escapeHtml(link.title || '')}" data-show-on-tree="${link.show_on_tree}" title="Edit">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
                             <button class="delete-btn" data-code="${escapeHtml(link.short_code)}" title="Delete">
@@ -799,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.querySelectorAll('.edit-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    openEditModal(btn.dataset.code, btn.dataset.url, btn.dataset.title, btn.dataset.tree === 'true');
+                    openEditModal(btn.dataset.code, btn.dataset.url, btn.dataset.title, btn.dataset.showOnTree === 'true');
                 });
             });
 
@@ -810,8 +903,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         btn.innerHTML = checkIconSVG;
                         btn.style.color = '#10B981';
                         showToast('Link copied to clipboard', 'success');
-                        setTimeout(() => { 
-                            btn.innerHTML = copyIconSVG; 
+                        setTimeout(() => {
+                            btn.innerHTML = copyIconSVG;
                             btn.style.color = 'var(--text-muted)';
                         }, 2000);
                     });
@@ -822,11 +915,11 @@ document.addEventListener('DOMContentLoaded', () => {
             linksList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Failed to load portfolio</div>';
         }
     }
-    
+
     async function loadAnalytics() {
         const analyticsList = document.getElementById('analytics-list');
         if (!analyticsList) return;
-        
+
         analyticsList.innerHTML = '<p class="text-muted" style="text-align: center; padding: 2rem 0;">Loading analytics...</p>';
         try {
             const r = await fetch('/api/analytics', { headers: headers() });
@@ -847,15 +940,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             analyticsList.innerHTML = data.analytics.map(link => {
                 const maxClicks = Math.max(...link.daily.map(d => d.clicks), 1);
-                const sparkline = link.daily.slice(-7).map(d => 
+                const sparkline = link.daily.slice(-7).map(d =>
                     `<div style="display:inline-block; width: 8px; height: ${Math.max(4, (d.clicks / maxClicks) * 30)}px; background: var(--accent); margin: 0 2px; border-radius: 2px;" title="${d.date}: ${d.clicks} clicks"></div>`
                 ).join('');
-                
+
                 return `
                     <div class="link-item" style="display:flex; flex-direction:column; gap: 0.5rem; padding-right:1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05);">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                             <div class="link-info">
-                                <div class="link-code">${escapeHtml(link.title)} <span style="font-size:0.8rem; color:var(--text-muted);">/${escapeHtml(link.short_code)}</span></div>
+                                <div class="link-code">${escapeHtml(link.short_code)}</div>
                             </div>
                             <div class="link-stats" style="font-size: 1.2rem; font-weight: 600; color: var(--primary);">
                                 ${link.total_clicks} <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">total</span>
@@ -867,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
             }).join('');
-            
+
         } catch (err) {
             console.error('loadAnalytics failed:', err);
             analyticsList.innerHTML = '<div class="text-muted" style="text-align: center; padding: 2rem 0;">Failed to load analytics</div>';
@@ -888,19 +981,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const url = urlInput.value.trim();
         const customCode = customCodeInput.value.trim();
-        const title = titleInput.value.trim();
-        const showOnTree = showOnTreeCheck.checked;
 
         if(!url) return;
 
         btnText.style.display = 'none';
         submitBtn.disabled = true;
         urlInput.disabled = true;
-        titleInput.disabled = true;
         customCodeInput.disabled = true;
         loadingContainer.style.display = 'block';
         loadingText.textContent = loadingMessages[0];
-        
+
         let msgIndex = 1;
         loadingInterval = setInterval(() => {
             if(msgIndex < loadingMessages.length) {
@@ -910,9 +1000,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 12000);
 
         try {
-            const payload = { url, show_on_tree: showOnTree };
+            const payload = {
+                url: url,
+                title: document.getElementById('link_title').value.trim() || null,
+                show_on_tree: document.getElementById('show_on_tree').checked
+            };
             if (customCode) payload.custom_code = customCode;
-            if (title) payload.title = title;
 
             const response = await fetch('/api/shorten', {
                 method: 'POST',
@@ -937,26 +1030,30 @@ document.addEventListener('DOMContentLoaded', () => {
             qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullShortUrl)}`;
             qrCodeContainer.classList.remove('hidden');
 
-            const resultText = resultSection.querySelector('p');
-            resultText.textContent = data.already_exists
-                ? 'This link was already in your portfolio.'
-                : 'Your premium link is ready.';
+            const resultText = document.getElementById('result-message');
+
+            let successMsg = 'Success! Your short link is ready.';
+
+            resultText.textContent = successMsg;
 
             form.classList.add('hidden');
             resultSection.classList.remove('hidden');
 
+            document.querySelector('.mode-toggle').classList.add('hidden');
+
             loadLinks();
-            showToast('Link shortened successfully', 'success');
+            showToast(successMsg, 'success');
 
         } catch (err) {
             showToast(err.message, 'error');
+            errorMsg.textContent = err.message;
+            errorMsg.classList.remove('hidden');
         } finally {
             clearInterval(loadingInterval);
             btnText.style.display = 'block';
             loadingContainer.style.display = 'none';
             submitBtn.disabled = false;
             urlInput.disabled = false;
-            titleInput.disabled = false;
             customCodeInput.disabled = false;
         }
     });
@@ -980,9 +1077,10 @@ document.addEventListener('DOMContentLoaded', () => {
         resultSection.classList.add('hidden');
         document.getElementById('qr-code-container').classList.add('hidden');
         form.classList.remove('hidden');
+        document.querySelector('.mode-toggle').classList.remove('hidden');
+        errorMsg.classList.add('hidden');
         urlInput.value = '';
         customCodeInput.value = '';
-        titleInput.value = '';
         urlInput.focus();
     });
 
@@ -1005,8 +1103,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function openEditModal(code, url, title, showOnTree) {
         currentEditCode = code;
         editUrlInput.value = url;
-        editTitleInput.value = title;
-        editShowTreeCheck.checked = showOnTree;
+        document.getElementById('edit-title').value = title || '';
+        document.getElementById('edit-show-tree').checked = showOnTree;
         editModal.classList.remove('hidden');
         editUrlInput.focus();
     }
@@ -1015,7 +1113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         editModal.classList.add('hidden');
         currentEditCode = null;
         editUrlInput.value = '';
-        editTitleInput.value = '';
     }
 
     cancelEditBtn.addEventListener('click', closeEditModal);
@@ -1033,8 +1130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const payload = {
                 original_url: newUrl,
-                title: editTitleInput.value.trim(),
-                show_on_tree: editShowTreeCheck.checked
+                title: document.getElementById('edit-title').value.trim() || null,
+                show_on_tree: document.getElementById('edit-show-tree').checked
             };
 
             const r = await fetch(`/api/links/${currentEditCode}`, {
@@ -1044,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (handle401(r)) return;
-            
+
             const data = await r.json();
             if (!r.ok) throw new Error(data.error?.message || data.detail || 'Failed to update link');
 

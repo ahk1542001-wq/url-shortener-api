@@ -23,16 +23,20 @@ def test_stats_after_redirect_shows_clicks(auth_client):
         json={"url": "https://example.com", "custom_code": "cnt"},
     )
     auth_client.get("/cnt", follow_redirects=False)
-    
-    from src.main import analytics_buffer
+
+    from src.analytics import analytics_buffer
     from src.database import get_db
     from datetime import datetime, timezone
+
     to_flush = dict(analytics_buffer)
     analytics_buffer.clear()
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     with get_db() as conn:
         for code, count in to_flush.items():
-            conn.execute("UPDATE urls SET click_count = click_count + ?, last_accessed = ? WHERE short_code = ?", (count, today, code))
+            conn.execute(
+                "UPDATE links SET click_count = click_count + ?, last_accessed = ? WHERE short_code = ?",
+                (count, today, code),
+            )
         conn.commit()
 
     r = auth_client.get("/api/stats/cnt")

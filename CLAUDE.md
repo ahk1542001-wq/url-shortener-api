@@ -12,6 +12,7 @@ Welcome! This repository uses **Spec-Driven Development** (SDD) as part of the V
 - Frontend: Vanilla HTML/JS/CSS (Glassmorphism UI)
 
 ## Security Rules
+- Account creation is restricted to admin only (no public registration).
 - NEVER commit secrets (e.g., `DATABASE_URL` or `ACCESS_PASSWORD`) to version control.
 - `DATABASE_URL` is injected via Render environment variables.
 - Run tests via `pytest -v` before finalizing any changes.

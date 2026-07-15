@@ -52,33 +52,53 @@
 | Security headers | Working |
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
-| Password protection | Working (login gate, eye toggle, logout button) |
+| Multi-User Auth | Working (JWT token, user registration, centralized auth helper) |
 | XSS protection | Working (escapeHtml on all user content in innerHTML) |
-| Auth failure handling | Centralized `handle401()` helper across all endpoints |
+| Link Trees | Working (Multiple public profiles per user) |
+| Link Tree Avatars | Working (Image upload to Cloudflare R2) |
 | Copy short URLs | One-click copy in My Links with ✅ feedback |
-| Link history | Hidden until login |
+| Standalone mode | Working (Links without a profile) |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
-| Tests | 26 passing |
+| Tests | 23 passing |
 
-## Deployment
+## Deployment & Rehearsal
 
-**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database)
+**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database) + Cloudflare R2 (avatar storage)
 
 **Live at:** https://swoo-sh.onrender.com
 
+### Pre-Deployment Checklist (Database Backup & Rehearsal)
+1. **Neon Backup:**
+   - Before deploying, log in to the Neon console at [neon.tech](https://neon.tech).
+   - Go to your database instance and create a new **Branch** or **Snapshot** (e.g. `backup-before-migration-version-1`) of your production database. This serves as an instant backup.
+2. **Migration Rehearsal:**
+   - Create a disposable test database or branch on Neon.
+   - Run the migration script locally against the test database using:
+     ```bash
+     POSTGRES_TEST_URL="postgresql://user:pass@test-host/testdb" .venv311/bin/pytest -v -m postgres
+     ```
+   - Verify that the tables, foreign keys, sequences, and data merges complete correctly before modifying the production database.
+
 ### How to Deploy
 1. Create a free Neon database at [neon.tech](https://neon.tech) → copy connection string
-2. Go to [render.com](https://render.com) → New Web Service → connect GitHub repo
-3. Set start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-4. Add env vars in Render dashboard:
+2. Create a Cloudflare R2 bucket → obtain endpoint, credentials, and public dev domain
+3. Go to [render.com](https://render.com) → New Web Service → connect GitHub repo
+4. Set runtime to Docker (uses the Dockerfile in the repository root)
+5. Add env vars in Render dashboard:
    - `DATABASE_URL` = Neon connection string
    - `RATE_LIMIT` = `30/minute`
-   - `ACCESS_PASSWORD` = choose a strong password
-5. Select Free instance → Deploy
+   - `JWT_SECRET` = choose a secure secret string (min 32 characters, generated with `openssl rand -hex 32`)
+   - `ADMIN_PASSWORD_HASH` = bcrypt hash of your admin password
+   - `R2_ENDPOINT` = Cloudflare R2 S3 Endpoint
+   - `R2_ACCESS_KEY_ID` = Cloudflare R2 Access Key ID
+   - `R2_SECRET_ACCESS_KEY` = Cloudflare R2 Secret Access Key
+   - `R2_BUCKET` = Cloudflare R2 Bucket Name
+   - `R2_PUBLIC_BASE_URL` = Cloudflare R2 Public Base URL
+6. Select Free instance → Deploy
 
 ### Rollback
 - Render: redeploy previous commit from dashboard
-- Neon: database is independent of hosting, data persists across deploys
+- Neon: if database migration fails, point `DATABASE_URL` back to the backup branch/snapshot created in the pre-deployment step, or restore the database state.
 
 ## Verification After Deploy
 

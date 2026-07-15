@@ -2,7 +2,7 @@
 
 ## 1. System Overview
 
-Swoosh is designed as a monolithic, self-contained application utilizing a **FastAPI backend** and a **Vanilla HTML/JS/CSS frontend**. It operates on a multi-tenant architecture, allowing multiple users to register, create public Link Tree profiles, and manage standalone short URLs.
+Swoosh is designed as a monolithic, self-contained application utilizing a **FastAPI backend** and a **Vanilla HTML/JS/CSS frontend**. It operates on a multi-tenant architecture, allowing multiple users to log in (registered by admin only, public registration is disabled), create public Link Tree profiles, and manage standalone short URLs.
 
 ```mermaid
 graph TD
@@ -36,9 +36,13 @@ The frontend uses a simple CSS-class based routing mechanism.
 The backend is built with Python 3.11 and FastAPI, chosen for its asynchronous capabilities, automatic OpenAPI documentation, and strict type validation (Pydantic).
 
 ### Core Components
-- **`src/main.py`**: The application entry point. Defines all HTTP endpoints (`/api/login`, `/api/shorten`, `/api/links`), API routers, rate limiters (`slowapi`), and the core JWT authorization logic.
+- **`src/main.py`**: The application entry point. Initializes FastAPI, sets up middleware, static file serving, and includes routers.
+- **`src/routers/`**: Contains modular endpoint logic (`auth.py`, `admin.py`, `profiles.py`, `links.py`, `redirects.py`).
+- **`src/schemas.py`**: Pydantic models for strict type validation.
+- **`src/dependencies.py`**: Shared logic such as `get_current_user`, `verify_admin`, and rate limiting (`slowapi`).
 - **`src/config.py`**: Handles environment variables via `os.environ`.
-- **`src/database.py`**: A database connection factory. It detects if a `DATABASE_URL` is present (for Neon PostgreSQL) or falls back to a local SQLite file (`shortener.db`).
+- **`src/database.py`**: A database connection factory. Detects if `DATABASE_URL` is present (for Neon PostgreSQL) or falls back to a local SQLite file (`shortener.db`).
+- **`src/analytics.py`**: Background task for flushing analytics to the database.
 
 ### Authentication Flow (JWT)
 1. User POSTs credentials to `/api/login`.
@@ -56,6 +60,7 @@ erDiagram
     USERS ||--o{ PROFILES : owns
     USERS ||--o{ LINKS : creates
     PROFILES ||--o{ LINKS : displays
+    LINKS ||--o{ DAILY_STATS : aggregates
     
     USERS {
         int id PK
@@ -70,20 +75,36 @@ erDiagram
         string bio
         int tree_views
         json social_links
+        string avatar_url
+        string avatar_object_key
     }
     
     LINKS {
-        string short_code PK
-        string original_url
-        int clicks
-        timestamp created_at
+        int id PK
         int user_id FK
         int profile_id FK "Nullable"
+        string short_code UK
+        string original_url
+        string title
+        boolean show_on_tree
+        int click_count
+        timestamp created_at
+        timestamp last_accessed
+    }
+
+    DAILY_STATS {
+        int id PK
+        int link_id FK
+        date date
+        int clicks
     }
 ```
 
 - **Standalone Mode**: When a user creates a link outside of a Link Tree, `profile_id` is set to `NULL`. The link is only associated with `user_id`.
-- **Link Tree Mode**: Links created within a profile are assigned a `profile_id`, determining which links appear on the public `/tree/{profile_username}` page.
+- **Link Tree Mode**: Links created within a profile are assigned a `profile_id`, determining which links appear on the public `/api/users/{username}/tree` page.
+- **Daily Stats**: Aggregate counts of clicks grouped by day. The foreign key `link_id` references `links(id)` with `ON DELETE CASCADE`.
+- **Avatar Storage**: Avatars are stored in Cloudflare R2. The `profiles.avatar_url` is the public URL of the avatar and `profiles.avatar_object_key` is the UUID-based key.
+- **Schema Migration Version**: Handled via the `schema_versions` table which keeps track of applied database migration scripts.
 
 ## 5. Security & Protection Mechanisms
 
@@ -95,8 +116,12 @@ Swoosh is designed to be self-hosted on public networks, meaning it is exposed t
 
 ## 6. Deployment Pipeline
 
-The application is deployed to **Render** as a Web Service.
+The application is deployed to **Render** as a Web Service utilizing a **Docker runtime**.
 1. Render pulls the latest code from the `main` branch.
-2. Render executes `pip install -r requirements.txt`.
-3. Render runs the application using Uvicorn via `uvicorn src.main:app --host 0.0.0.0 --port $PORT`.
-4. Render injects securely stored Environment Variables (`DATABASE_URL`, `JWT_SECRET`) at runtime, preventing secrets from being leaked in the Git repository.
+2. Render builds the Docker image using the `Dockerfile` at the root of the repository.
+3. Render runs the Docker container, launching `uvicorn src.main:app --host 0.0.0.0 --port $PORT` (binding to the port specified in `$PORT`).
+4. Render injects securely configured Environment Variables at runtime, preventing secrets from leaking in git:
+   - `DATABASE_URL`: Connection string for Neon PostgreSQL database.
+   - `JWT_SECRET`: Secure 32-character (or longer) signing key for JWT tokens.
+   - `ADMIN_PASSWORD_HASH`: Hashed bcrypt password for the initial admin account.
+   - `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`: Configuration parameters for Cloudflare R2 avatar image storage.

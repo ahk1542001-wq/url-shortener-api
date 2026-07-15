@@ -11,7 +11,7 @@ auto-advance: 20
 **Live:** url-shortener-api-jcbx.onrender.com
 
 Built with FastAPI + Neon PostgreSQL
-Hardened with validation, rate limiting, security headers, 26 tests
+Hardened with validation, rate limiting, security headers, 31 tests
 Developed using spec-driven workflow and Addy Osmani's agent-skills
 
 ---
@@ -23,13 +23,14 @@ Developed using spec-driven workflow and Addy Osmani's agent-skills
 **Solution:** Short, custom, trackable links with a clean glassmorphism UI.
 
 **What makes it production-ready:**
-- Password-protected access (show/hide toggle + logout)
+- Multi-User JWT Authentication (Admin-created accounts)
+- Link Trees (Public Profiles) & Standalone Links
 - Input validation (Pydantic)
 - Rate limiting (30 req/min per IP)
 - Security headers on every response
 - Structured JSON errors
 - URL deduplication
-- Click tracking + link management
+- Click tracking + full link lifecycle management
 
 ---
 
@@ -40,10 +41,10 @@ Developed using spec-driven workflow and Addy Osmani's agent-skills
 | Step | Tool | What happened |
 |------|------|---------------|
 | Spec | Claude Code | Wrote structured requirements doc |
-| Plan | Claude Code | Broke into 6 steps with checklist |
-| Build | Claude Code | Incremental implementation, test-driven |
+| Plan | Claude Code | Broke into steps and iterated for Multi-User/Trees |
+| Build | Claude Code | Modular architecture with modular routers |
 | MCP | mcp-server-sqlite | Live DB inspection during dev |
-| Skill | url-api-contract | Enforced API consistency |
+| Skill | url-api-contract | Enforced API consistency across routers |
 | Agent | url-tester | Autonomously verified endpoints |
 
 ---
@@ -61,8 +62,10 @@ Browser → FastAPI (Render) → Neon PostgreSQL
 ```
 
 **Endpoints:**
-- `POST /api/shorten` — create short URL (dedup + rate limit)
-- `GET /<code>` — 302 redirect + click tracking
+- `POST /api/login` — User authentication (JWT)
+- `POST /api/admin/register` — Admin-created accounts
+- `POST /api/profiles/avatar` — Upload avatar to Cloudflare R2
+- `POST /api/profiles` — Create link tree profiles
 - `GET /api/links` — list all saved links
 - `DELETE /api/links/<code>` — remove a link
 - `GET /api/health` — monitoring
@@ -73,15 +76,14 @@ Browser → FastAPI (Render) → Neon PostgreSQL
 
 | Area | Before | After |
 |------|--------|-------|
-| URL validation | `startswith("http")` | Pydantic HttpUrl, 2048 char limit |
-| Custom codes | No limits | 3-20 chars, alphanumeric, reserved words blocked |
+| Architecture | Monolithic | Modular (routers, dependencies) |
+| Features | Single User | Multi-User Auth + Link Trees |
 | Rate limiting | None | 30/min on POST via slowapi |
-| Password | None | Password required for POST/DELETE |
-| Errors | Raw HTTPException | Structured JSON everywhere |
-| Database | SQLite, open/close per request | Context managers, Neon PostgreSQL |
-| Config | Hardcoded | .env-driven |
-| Tests | None | 26 passing |
-| Security | None | Headers on every response |
+| Password | Single password | Multi-User JWT Auth (Admin-Created) |
+| Database | SQLite only | SQLite/PostgreSQL Migrations + R2 |
+| Config | Hardcoded | .env-driven + startup checks |
+| Tests | None | Full audit test suite passing |
+| Security | None | Headers, Rate limit, Secure secrets validation |
 
 ---
 

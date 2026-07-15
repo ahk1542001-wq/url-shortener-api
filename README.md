@@ -21,9 +21,9 @@ With the latest update, Swoosh supports **multi-user accounts** and **Link Trees
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-User Accounts** | Login securely with username/password backed by JWT authentication. |
-| **Link Tree Mode** | Group links under customizable profiles to create Link Tree pages (`/tree/{username}`). |
-| **Standalone Mode** | Create standard short URLs disconnected from any profile. |
+| **Multi-User Accounts** | Login securely with username/password backed by JWT authentication. (Accounts are created by admin only; no public registration). |
+| **Link Tree Mode** | Create public Link Tree pages (`/u/{username}`) complete with customizable bios, social links, and avatars. |
+| **Standalone Mode** | Create standard short URLs. |
 | **Shorten URLs** | Paste a long URL → get a 6-character short code. |
 | **Custom codes** | Choose your own short code (e.g., `swoo.sh/my-event`). |
 | **Click tracking** | Every redirect increments a click counter, with basic analytics. |
@@ -58,13 +58,29 @@ curl -X POST https://swoo-sh.onrender.com/api/shorten \
   -d '{"url": "https://example.com/very/long/path"}'
 ```
 
-### Shorten a URL (Link Tree)
+### Create Link Tree Profile
 ```bash
-curl -X POST https://swoo-sh.onrender.com/api/shorten \
+curl -X POST https://swoo-sh.onrender.com/api/profiles \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your-token>" \
-  -H "X-Active-Profile: your-profile-username" \
-  -d '{"url": "https://example.com/very/long/path"}'
+  -d '{"username": "my-profile"}'
+```
+
+### Update Link Tree Profile (Active Profile)
+```bash
+curl -X PUT https://swoo-sh.onrender.com/api/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-token>" \
+  -H "X-Active-Profile: my-profile" \
+  -d '{"username": "my-profile", "bio": "Hello world", "social_links": [{"platform": "twitter", "url": "https://twitter.com/my-profile", "title": "Twitter"}]}'
+```
+
+### Upload Link Tree Avatar
+```bash
+curl -X POST https://swoo-sh.onrender.com/api/profiles/avatar \
+  -H "Authorization: Bearer <your-token>" \
+  -H "X-Active-Profile: my-profile" \
+  -F "file=@/path/to/avatar.jpg"
 ```
 
 ### Visit a short link (no auth needed)
@@ -75,7 +91,7 @@ https://swoo-sh.onrender.com/aB3xYz
 
 ### View a Link Tree
 ```
-https://swoo-sh.onrender.com/tree/my-profile
+https://swoo-sh.onrender.com/u/my-profile
 → Renders a public link tree page for that profile.
 ```
 
@@ -91,15 +107,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Create your .env file
-cat > .env << EOF
-DB_NAME=shortener.db
-HOST=0.0.0.0
-PORT=8000
-RATE_LIMIT=30/minute
-JWT_SECRET=super_secret_key_change_me
-ADMIN_PASSWORD_HASH=\$2b\$12\$your_bcrypt_hash_here
-EOF
+# Create your .env file, then fill in the generated values
+cp .env.example .env
+openssl rand -hex 32
+python -c "from passlib.hash import bcrypt; print(bcrypt.hash('YOUR_STRONG_ADMIN_PASSWORD'))"
+
+# In .env, set JWT_SECRET to the first command's output and
+# ADMIN_PASSWORD_HASH to the second command's output.
 
 # Start the server
 uvicorn src.main:app --reload --port 8000
@@ -133,7 +147,7 @@ Open `http://localhost:8000` to interact with the web interface.
 | `url` | Must start with `http://` or `https://`, max 2048 characters |
 | `custom_code` | 3-20 characters, letters/numbers/hyphens only, not a reserved word |
 
-**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`
+**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`, `u`
 
 ## Environment Variables
 
@@ -146,6 +160,11 @@ Open `http://localhost:8000` to interact with the web interface.
 | `RATE_LIMIT` | `30/minute` | Rate limit on POST /api/shorten |
 | `JWT_SECRET` | (required) | Secret key used to sign JWT tokens |
 | `ADMIN_PASSWORD_HASH`| (required) | bcrypt hash for the default admin user |
+| `R2_ENDPOINT` | (empty) | Cloudflare R2 S3 API Endpoint |
+| `R2_ACCESS_KEY_ID` | (empty) | Cloudflare R2 Access Key ID |
+| `R2_SECRET_ACCESS_KEY` | (empty) | Cloudflare R2 Secret Access Key |
+| `R2_BUCKET` | (empty) | Cloudflare R2 Bucket Name |
+| `R2_PUBLIC_BASE_URL` | (empty) | Cloudflare R2 Public Base URL for serving uploaded avatars |
 
 ## Error Responses
 
@@ -168,14 +187,26 @@ All errors return structured JSON:
 ```
 url-shortener-api/
 ├── src/
-│   ├── main.py         → Main FastAPI application (routes, models, middleware)
+│   ├── main.py         → Main FastAPI application (app init, middleware, static files)
+│   ├── routers/        → API endpoint modules
+│   │   ├── auth.py     → Authentication routes
+│   │   ├── admin.py    → Admin user management
+│   │   ├── profiles.py → Profile and link tree routes
+│   │   ├── links.py    → URL shortening and analytics routes
+│   │   └── redirects.py→ Core redirect routes
+│   ├── schemas.py      → Pydantic models for validation
+│   ├── dependencies.py → Auth logic, rate limiting, and dependencies
 │   ├── config.py       → Environment variable loading
 │   ├── database.py     → PostgreSQL + SQLite connection management
-│   └── auth.py         → JWT Token generation and password hashing
+│   ├── analytics.py    → Background task for analytics flush
+│   └── utils.py        → Helper utilities
 ├── docs/
 │   ├── SPEC.md         → Project specification
 │   ├── PLAN.md         → Implementation plan
 │   └── SHIP.md         → Deployment checklist
+├── wiki/               → Architecture and pattern documentation
+├── screenshots/        → Project screenshots and assets
+├── slides/             → Presentation materials
 ├── tests/
 │   ├── conftest.py     → Test fixtures
 │   ├── test_shorten.py → Shorten endpoint tests
