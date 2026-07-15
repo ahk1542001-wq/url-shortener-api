@@ -3,166 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Swoosh | Link Tree</title>
-    <meta name="description" content="Premium links and resources">
-    <meta name="theme-color" content="#1C1917">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Link Tree | SWOOSH</title>
+    <meta name="description" content="Discover my links on SWOOSH.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 2rem 1rem;
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --card-border: rgba(255, 255, 255, 0.5);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
         }
-        
-        .tree-container {
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e0e7ff 0%, #fefce8 100%);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .background-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: #818cf8;
+            top: -100px;
+            left: -100px;
+            animation: float 10s ease-in-out infinite alternate;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: #fde047;
+            bottom: 10%;
+            right: -50px;
+            animation: float 8s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(30px) scale(1.1); }
+        }
+
+        .container {
             width: 100%;
             max-width: 600px;
-            animation: fadeIn 0.6s ease-out forwards;
-        }
-        
-        .tree-header {
+            padding: 3rem 1.5rem;
+            box-sizing: border-box;
             text-align: center;
-            margin-bottom: 2rem;
         }
-        
-        .tree-avatar {
-            width: 100px;
-            height: 100px;
+
+        .profile-header {
+            margin-bottom: 2.5rem;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px var(--shadow-color);
-            margin: 0 auto 1rem auto;
-            object-fit: cover;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        
-        .tree-username {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.02em;
-        }
-        
-        .tree-bio {
-            font-size: 1rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
-            padding: 0 1rem;
-        }
-        
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .social-btn {
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            margin: 0 auto 1.5rem auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            color: var(--text);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+            border: 4px solid white;
         }
-        
-        .social-btn:hover {
-            transform: translateY(-3px);
-            background: #FFFFFF;
-            color: var(--primary);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+
+        .username {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
         }
-        
-        .tree-links {
+
+        .bio {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.5;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .links-container {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        
-        .tree-link-btn {
-            display: block;
-            width: 100%;
-            padding: 1.2rem;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
+
+        .link-card {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
             border-radius: 16px;
-            color: var(--text);
+            text-decoration: none;
+            color: var(--text-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .link-icon {
+            font-size: 1.5rem;
+            margin-right: 1.25rem;
+            width: 32px;
+            text-align: center;
+        }
+
+        .link-title {
+            flex-grow: 1;
             font-weight: 600;
             font-size: 1.05rem;
+            text-align: left;
+        }
+
+        .link-arrow {
+            color: var(--text-muted);
+            opacity: 0.5;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .link-card:hover .link-arrow {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        /* Platform specific colors */
+        .platform-twitter .link-icon { color: #1DA1F2; }
+        .platform-instagram .link-icon { color: #E1306C; }
+        .platform-linkedin .link-icon { color: #0077B5; }
+        .platform-github .link-icon { color: #333; }
+        .platform-facebook .link-icon { color: #1877F2; }
+        .platform-youtube .link-icon { color: #FF0000; }
+        .platform-tiktok .link-icon { color: #000000; }
+        .platform-website .link-icon { color: var(--accent); }
+        .platform-other .link-icon { color: var(--text-muted); }
+
+        footer {
+            margin-top: auto;
+            padding: 2rem 0;
             text-align: center;
+        }
+
+        .swoosh-branding {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
             text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .tree-link-btn:hover {
-            transform: scale(1.02);
-            background: #FFFFFF;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-            border-color: #FFFFFF;
-        }
-        
-        .tree-link-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        
-        .tree-footer {
-            margin-top: 4rem;
-            text-align: center;
+            color: var(--text-muted);
             font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        .tree-footer a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
             transition: color 0.2s;
         }
-        
-        .tree-footer a:hover {
-            color: var(--text);
+
+        .swoosh-branding:hover {
+            color: var(--accent);
         }
-        
-        #error-state {
+
+        .swoosh-branding img {
+            height: 20px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .swoosh-branding:hover img {
+            opacity: 1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Error state */
+        .error-state {
             text-align: center;
-            background: rgba(255,255,255,0.8);
             padding: 3rem;
-            border-radius: 24px;
-            backdrop-filter: blur(10px);
         }
-        
-        /* Loading Skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.4) 25%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.4) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: 8px;
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(99, 102, 241, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            margin: 3rem auto;
         }
-        
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -171,77 +251,165 @@
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
     </div>
-    
-    <div class="tree-container">
-        <div id="loading-state">
-            <div class="tree-header">
-                <div class="tree-avatar skeleton" style="border: none;"></div>
-                <div class="skeleton" style="height: 30px; width: 50%; margin: 0 auto 1rem auto;"></div>
-                <div class="skeleton" style="height: 20px; width: 80%; margin: 0 auto 0.5rem auto;"></div>
-                <div class="skeleton" style="height: 20px; width: 60%; margin: 0 auto 2rem auto;"></div>
-            </div>
-            <div class="tree-links">
-                <div class="tree-link-btn skeleton" style="color: transparent; border: none;">Loading...</div>
-                <div class="tree-link-btn skeleton" style="color: transparent; border: none;">Loading...</div>
-                <div class="tree-link-btn skeleton" style="color: transparent; border: none;">Loading...</div>
-            </div>
-        </div>
-        
-        <div id="error-state" class="hidden glass-card">
-            <h2 style="margin-bottom: 1rem;">Profile Not Found</h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">This link tree does not exist or has been disabled.</p>
-            <a href="/" class="secondary-btn" style="text-decoration: none; display: inline-block;">Return Home</a>
-        </div>
 
-        <div id="tree-content" class="hidden">
-            <div class="tree-header">
-                <!-- Fallback to a nice gradient if no avatar -->
-                <img id="profile-avatar" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23F3F4F6%22/><text y=%22.9em%22 x=%220.1em%22 font-size=%2280%22>👤</text></svg>" alt="Profile Avatar" class="tree-avatar">
-                
-                <h1 id="profile-username" class="tree-username">@username</h1>
-                <p id="profile-bio" class="tree-bio"></p>
-                
-                <div id="social-container" class="social-icons hidden">
-                    <!-- Social Icons injected here -->
-                </div>
-            </div>
-            
-            <div id="links-container" class="tree-links">
-                <!-- Links injected here -->
-            </div>
-            
-            <div class="tree-footer">
-                <p>Powered by <a href="/">Swoosh</a></p>
-            </div>
-        </div>
+    <div class="container" id="app">
+        <div class="loading-spinner" id="loader"></div>
     </div>
-    
-    <!-- SVG Definitions for Social Icons -->
-    <svg style="display: none;">
-        <symbol id="icon-twitter" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
-        </symbol>
-        <symbol id="icon-instagram" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"></path>
-        </symbol>
-        <symbol id="icon-linkedin" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path>
-        </symbol>
-        <symbol id="icon-github" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
-        </symbol>
-        <symbol id="icon-website" viewBox="0 0 24 24">
-            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <circle cx="12" cy="12" r="9" fill="none"></circle>
-            <path fill="none" d="M3.6 9h16.8M3.6 15h16.8"></path>
-            <path fill="none" d="M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"></path>
-        </symbol>
-        <symbol id="icon-other" viewBox="0 0 24 24">
-            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-        </symbol>
-    </svg>
 
-    <script src="/static/tree.js"></script>
+    <footer>
+        <a href="/" class="swoosh-branding">
+            <span>Powered by</span>
+            <img src="/static/logo.png" alt="SWOOSH">
+        </a>
+    </footer>
+
+    <script>
+        const getIconClass = (platform) => {
+            const map = {
+                'twitter': 'fa-brands fa-twitter',
+                'instagram': 'fa-brands fa-instagram',
+                'linkedin': 'fa-brands fa-linkedin',
+                'github': 'fa-brands fa-github',
+                'facebook': 'fa-brands fa-facebook',
+                'youtube': 'fa-brands fa-youtube',
+                'tiktok': 'fa-brands fa-tiktok',
+                'website': 'fa-solid fa-globe',
+                'other': 'fa-solid fa-link'
+            };
+            return map[platform] || map['other'];
+        };
+
+        const escapeHtml = (unsafe) => {
+            if (!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        };
+
+        const getDisplayTitle = (link) => {
+            if (link.title) return escapeHtml(link.title);
+            if (link.platform && link.platform !== 'website' && link.platform !== 'other') {
+                return link.platform.charAt(0).toUpperCase() + link.platform.slice(1);
+            }
+            return escapeHtml(link.url.replace(/^https?:\/\//, '').replace(/\/$/, ''));
+        };
+
+        async function init() {
+            const pathParts = window.location.pathname.split('/');
+            const username = pathParts[pathParts.length - 1];
+
+            if (!username) {
+                showError("Profile not found");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users/${username}/tree`);
+                if (!res.ok) {
+                    if (res.status === 404) throw new Error("Profile not found");
+                    throw new Error("Failed to load profile");
+                }
+
+                const data = await res.json();
+                renderProfile(data);
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        function renderProfile(data) {
+            const app = document.getElementById('app');
+            const initial = data.username.charAt(0).toUpperCase();
+            const avatarHtml = data.avatar_url
+                ? `<img src="${escapeHtml(data.avatar_url)}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">`
+                : initial;
+
+            let html = `
+                <div class="profile-header">
+                    <div class="avatar">${avatarHtml}</div>
+                    <h1 class="username">@${escapeHtml(data.username)}</h1>
+                    ${data.bio ? `<p class="bio">${escapeHtml(data.bio)}</p>` : ''}
+                </div>
+                <div class="links-container">
+            `;
+
+            let hasLinks = false;
+
+            if (data.social_links && data.social_links.length > 0) {
+                hasLinks = true;
+                data.social_links.forEach((link, index) => {
+                    const delay = index * 0.1;
+                    const displayTitle = getDisplayTitle(link);
+                    const iconClass = getIconClass(link.platform);
+                    const platformClass = `platform-${escapeHtml(link.platform || 'other')}`;
+
+                    // Add protocol if missing
+                    let href = link.url;
+                    if (!href.startsWith('http://') && !href.startsWith('https://')) {
+                        href = 'https://' + href;
+                    }
+
+                    html += `
+                        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="link-card ${platformClass}" style="animation-delay: ${delay}s">
+                            <i class="${iconClass} link-icon"></i>
+                            <span class="link-title">${displayTitle}</span>
+                            <i class="fa-solid fa-chevron-right link-arrow"></i>
+                        </a>
+                    `;
+                });
+            }
+
+            if (data.tree_links && data.tree_links.length > 0) {
+                hasLinks = true;
+                data.tree_links.forEach((link, index) => {
+                    const delay = ((data.social_links || []).length + index) * 0.1;
+                    const displayTitle = escapeHtml(link.title || link.short_code);
+                    const href = `${window.location.origin}/${link.short_code}`;
+                    html += `
+                        <a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="link-card platform-website" style="animation-delay: ${delay}s">
+                            <i class="fa-solid fa-link link-icon"></i>
+                            <span class="link-title">${displayTitle}</span>
+                            <i class="fa-solid fa-chevron-right link-arrow"></i>
+                        </a>
+                    `;
+                });
+            }
+
+            if (!hasLinks) {
+                html += `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+                        <i class="fa-solid fa-seedling" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>No links added yet.</p>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            app.innerHTML = html;
+
+            // Update page title
+            document.title = `${data.username} | SWOOSH`;
+        }
+
+        function showError(msg) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="error-state">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 3rem; color: #EF4444; margin-bottom: 1rem;"></i>
+                    <h2 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">Oops!</h2>
+                    <p style="color: var(--text-muted); margin: 0;">${escapeHtml(msg)}</p>
+                    <a href="/" style="display: inline-block; margin-top: 1.5rem; color: var(--accent); text-decoration: none; font-weight: 500;">
+                        Go to Homepage &rarr;
+                    </a>
+                </div>
+            `;
+        }
+
+        // Run
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>

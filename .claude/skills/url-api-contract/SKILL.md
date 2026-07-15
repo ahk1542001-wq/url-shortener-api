@@ -21,11 +21,22 @@ Design stable, well-documented interfaces for the URL Shortener built with FastA
 Define the interface before implementing it. The contract is the spec — implementation follows.
 
 ```python
+# Login
+POST /api/login
+Input: { "username": "admin", "password": "your-password" }
+Output: { "token": "ey..." }
+
 # Create Short URL
 POST /api/shorten
-Headers: { "X-Access-Password": "<your-password>" }
+Headers: { "Authorization": "Bearer <token>" }
 Input: { "url": "https://example.com/very/long/path", "custom_code": "optional-custom" }
 Output: { "short_code": "aB3dE", "original_url": "https://example.com/..." }
+
+# Upload Avatar (R2)
+POST /api/profiles/avatar
+Headers: { "Authorization": "Bearer <token>" }
+Input: multipart/form-data with file
+Output: { "message": "Avatar uploaded successfully", "avatar_url": "https://..." }
 
 # Redirect
 GET /<code>
@@ -46,10 +57,10 @@ FastAPI handles automatic validation errors (422 Unprocessable Entity) and custo
   }
 }
 ```
-Auth endpoints return 401 if `X-Access-Password` is missing or invalid. Rate-limited endpoints return 429.
+Auth endpoints return 401 if the JWT is missing, invalid, or expired. Rate-limited endpoints return 429.
 
 ### 3. Validate at Boundaries
-Validate the provided URL before inserting into the SQLite database. Ensure it is a valid HTTP/HTTPS URL via Pydantic or custom logic.
+Validate the provided URL before inserting into the database. Ensure it is a valid HTTP/HTTPS URL via Pydantic or custom logic.
 
 ## Red Flags
 - Endpoints returning different shapes.
@@ -61,4 +72,5 @@ After designing or modifying the API:
 - [ ] Every endpoint has typed input and output schemas.
 - [ ] Error responses follow a single consistent format.
 - [ ] Validation happens at system boundaries only.
-- [ ] The SQLite database is securely accessed and properly increments clicks.
+- [ ] The database is securely accessed and properly increments clicks.
+- [ ] Avatar files are validated (under 2MB, valid format) before uploading to R2.

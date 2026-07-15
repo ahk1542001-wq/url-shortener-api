@@ -23,17 +23,10 @@ def test_redirect_increments_click_count(auth_client):
     )
     auth_client.get("/clicks", follow_redirects=False)
     auth_client.get("/clicks", follow_redirects=False)
-    
-    from src.main import analytics_buffer
-    from src.database import get_db
-    from datetime import datetime, timezone
-    to_flush = dict(analytics_buffer)
-    analytics_buffer.clear()
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    with get_db() as conn:
-        for code, count in to_flush.items():
-            conn.execute("UPDATE urls SET click_count = click_count + ?, last_accessed = ? WHERE short_code = ?", (count, today, code))
-        conn.commit()
+
+    from src.analytics import _flush_now
+
+    _flush_now()
 
     r = auth_client.get("/api/stats/clicks")
     assert r.json()["click_count"] == 2

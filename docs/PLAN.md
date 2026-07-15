@@ -2,35 +2,21 @@
 
 ## Steps
 
-1. **Foundation** — Create `config.py` (env-driven settings), `database.py` (context manager), clean `requirements.txt`.
-2. **Refactor app.py** — Wire in `config` + `database` modules, replace deprecated `on_event` with `lifespan`, add structured JSON errors, add `GET /api/health`.
+1. **Foundation** — Multi-user authentication (JWT), structured database, `config.py` (env-driven settings), `database.py` (context manager), clean `requirements.txt`.
+2. **Refactor `main.py`** — Split the monolith into a modular FastAPI structure (`routers/`, `schemas.py`, `dependencies.py`, `analytics.py`, `utils.py`).
 3. **Harden inputs** — Pydantic validation, custom code constraints (3-20 chars, alphanumeric + hyphens), block reserved words, max URL length 2048.
 4. **Rate limiting + security headers** — `slowapi` at 30 req/min on `POST /api/shorten`. Add `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`.
-5. **Password protection** — Add `ACCESS_PASSWORD` env var, middleware to protect POST/DELETE/GET /api/links, frontend login gate with eye toggle, logout button.
+5. **Multi-User / Profiles** — Support `users` and `profiles` tables. `users` can have multiple `profiles`. URLs are attached to either the user or a specific profile.
 6. **PostgreSQL support** — Add `DATABASE_URL` env var, dynamic placeholders for SQLite/PostgreSQL, `_fmt_dt()` helper for datetime formatting.
-7. **Tests** — `tests/conftest.py` with in-memory SQLite fixtures. Test files for shorten, redirect, stats, password protection (26 tests).
-8. **Copy button** — Add copy button (📋) next to delete in My Links. Copies full short URL to clipboard, shows ✅ for 2 seconds.
-9. **Docs** — README, SPEC, PLAN, SHIP, report.md, Marp slides (6 slides, 20s auto-advance).
+7. **Frontend Evolution** — Clean single-page application using vanilla JS with an iOS-style toggle. Dynamic Tree Mode (`/u/{username}`).
+8. **Docs** — README, SPEC, PLAN, SHIP, report.md, wiki/ (architecture, patterns, decisions).
 
 ## What "Good" Looks Like
 
+- Fully modular backend in `src/routers/`.
 - Every endpoint returns structured JSON errors.
-- Password required for write operations and link listing.
-- Link history hidden until login.
-- `pytest -v` passes with 26 tests.
-- `ruff check .` is clean.
+- JWT token required for operations. Admin endpoints protected.
+- Link history and multi-profile support.
 - Security headers on every response.
 - No secrets in repo.
 - Live on Render + Neon PostgreSQL.
-
-## Checklist
-
-- [x] `pytest -v` passes (26 tests)
-- [x] Password protection on POST/DELETE/GET /api/links
-- [x] Rate limiting (30 req/min on POST /api/shorten)
-- [x] Security headers on every response
-- [x] Structured JSON errors everywhere
-- [x] Neon PostgreSQL for production, SQLite for local dev
-- [x] Frontend with login gate, eye toggle, logout button
-- [x] No secrets in repo
-- [x] All docs updated (README, SPEC, PLAN, SHIP, report, slides)

@@ -1,10 +1,57 @@
-*.db
-.venv
-__pycache__/
-*.pyc
+# Environment variables & Secrets
 .env
 .mcp.json
-.opencode/
-.DS_Store
+
+# Python Virtual Environments
+.venv/
+.venv311/
 venv/
+env/
+
+# Python Cache & Logs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Testing & Linting Cache
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+shortener.db
+
+# AI Assistant & Agent Configurations
 .agents/
+.claude/
+.codex/
+.opencode/
+AGENTS.md
+CLAUDE.md
+
+# OS Generated Files
+.DS_Store
+*.swp
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Environments
+.env.*

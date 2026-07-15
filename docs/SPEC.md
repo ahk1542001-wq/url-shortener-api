@@ -36,6 +36,8 @@ Format:  ruff format .
 | Shorten URLs | POST /api/shorten → returns 6-char code |
 | Custom codes | Optional, 3-20 chars, alphanumeric + hyphens |
 | Link Tree Profiles | POST /api/profiles → Create a profile to organize links |
+| Edit Link Tree | PUT /api/me → Update profile bio and social links |
+| Link Tree Avatars | POST /api/profiles/avatar → Upload profile picture |
 | Standalone Links | Shorten URLs without a profile (kept private) |
 | Redirect | GET /{code} → 302 redirect + click tracking |
 | Link listing | GET /api/links (JWT protected) |
@@ -54,7 +56,7 @@ Format:  ruff format .
 | `custom_code` | 3-20 chars, letters/numbers/hyphens only, not a reserved word |
 | `username` | 3-30 chars, alphanumeric + hyphens only |
 
-**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`
+**Reserved codes:** `api`, `admin`, `static`, `health`, `docs`, `openapi`, `tree`, `u`
 
 ## Security
 

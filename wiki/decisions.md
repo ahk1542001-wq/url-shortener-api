@@ -14,5 +14,9 @@
 - **Reasoning**: Keeps the application lightweight and monolithic. No build step required for the frontend. Glassmorphism styling achieves the "luxury" vibe requested by the user.
 
 ## 4. Auth
-- **Decision**: Simple password-based authentication via headers (`X-Access-Password`).
-- **Reasoning**: It's a personal URL shortener. No need for complex OAuth or JWT infrastructure. A single password in the environment variables is sufficient and secure.
+- **Decision**: Multi-User Authentication via JWT (JSON Web Tokens).
+- **Reasoning**: To support Link Trees and multiple profiles independently, the application requires individual user accounts. JWT provides a stateless, scalable way to authenticate API requests without relying on server-side session storage.
+
+## 5. UI Layout
+- **Decision**: Adaptive Desktop Sidebar and Mobile Dock.
+- **Reasoning**: To support a richer feature set (Dashboard vs Link Trees), we moved away from a single centered card to a responsive layout that utilizes a persistent navigation structure, providing a more premium app-like experience.

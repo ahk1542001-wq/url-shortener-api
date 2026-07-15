@@ -22,13 +22,14 @@ Developed using spec-driven workflows.
 **Solution:** Short, custom, trackable links with a clean glassmorphism UI.
 
 **What makes it production-ready:**
-- Password-protected access (show/hide toggle + logout)
+- Multi-User JWT Authentication (Registration & Login)
+- Link Trees (Public Profiles) & Standalone Links
 - Input validation (Pydantic)
 - Rate limiting (30 req/min per IP)
 - Security headers on every response
 - Structured JSON errors
 - URL deduplication
-- Click tracking + link management
+- Click tracking + full link lifecycle management
 
 ---
 
@@ -39,10 +40,10 @@ Developed using spec-driven workflows.
 | Step | Tool | What happened |
 |------|------|---------------|
 | Spec | Claude | Wrote structured requirements doc |
-| Plan | Claude | Broke into 6 steps with checklist |
-| Build | Claude | Incremental implementation, test-driven |
+| Plan | Claude | Broke into steps and iterated for Multi-User/Trees |
+| Build | Claude | Modular architecture with modular routers |
 | DB   | MCP | Live DB inspection during dev |
-| API  | Skill | Enforced API consistency |
+| API  | Skill | Enforced API consistency across routers |
 | Test | Agent | Autonomously verified endpoints |
 
 ---
