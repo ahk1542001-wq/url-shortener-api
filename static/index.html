@@ -236,6 +236,70 @@
                 </div>
             </div>
 
+            <!-- VIEW: ADMIN USER DETAIL -->
+            <div id="admin-user-detail-view" class="hidden admin-shell">
+                <aside class="desktop-sidebar">
+                    <div class="sidebar-logo">
+                        <img class="sidebar-brand-mark" src="/static/logo.png?v=2" alt="">
+                        <span class="logo-text">Admin</span>
+                    </div>
+                    <nav class="sidebar-nav">
+                        <button class="sidebar-btn" id="nav-admin-detail-back">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>Back to Users</span>
+                        </button>
+                    </nav>
+                </aside>
+
+                <div class="dashboard-content admin-detail-content">
+                    <div class="glass-card">
+                        <div class="admin-detail-heading">
+                            <div>
+                                <p class="admin-eyebrow">Account management</p>
+                                <h2 id="admin-detail-title">User details</h2>
+                            </div>
+                            <span id="admin-detail-status" class="admin-status-badge">Active</span>
+                        </div>
+
+                        <div id="admin-user-summary" class="admin-summary-grid" aria-live="polite"></div>
+
+                        <form id="admin-edit-user-form">
+                            <div class="input-group">
+                                <label for="admin-edit-username">Username</label>
+                                <input type="text" id="admin-edit-username" required autocomplete="off">
+                            </div>
+                            <div class="input-group">
+                                <label for="admin-edit-password">Reset password</label>
+                                <input type="password" id="admin-edit-password" autocomplete="new-password" placeholder="New password (optional)">
+                                <small class="field-help">Existing passwords cannot be viewed. Enter at least 5 characters only when resetting it.</small>
+                            </div>
+                            <label class="admin-active-toggle" for="admin-edit-active">
+                                <input type="checkbox" id="admin-edit-active">
+                                <span>
+                                    <strong>Account active</strong>
+                                    <small>Disabled accounts cannot log in and existing tokens stop working.</small>
+                                </span>
+                            </label>
+                            <div id="admin-protected-note" class="admin-protected-note hidden">
+                                The environment-managed admin account is read-only here.
+                            </div>
+                            <div class="admin-detail-actions">
+                                <button type="button" id="admin-delete-user-btn" class="danger-btn">Delete account</button>
+                                <button type="submit" id="admin-save-user-btn">Save changes</button>
+                            </div>
+                            <div id="admin-edit-user-error" class="error hidden"></div>
+                        </form>
+                    </div>
+
+                    <div class="glass-card">
+                        <h2>Owned Link Tree profiles</h2>
+                        <div id="admin-user-profiles" class="admin-profile-list">
+                            <p class="text-muted">Loading profiles...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- VIEW 2.4: FEATURE SELECTION PAGE -->
             <div id="feature-selection-view" class="hidden">
                 <div style="text-align: center; margin-bottom: 3rem;">

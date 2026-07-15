@@ -32,12 +32,12 @@ def get_current_user(request: Request) -> dict:
                 c = conn.cursor()
                 if USE_POSTGRES:
                     c.execute(
-                        "SELECT id FROM users WHERE LOWER(username) = LOWER(%s)",
+                        "SELECT id FROM users WHERE LOWER(username) = LOWER(%s) AND is_active = TRUE",
                         ("admin",),
                     )
                 else:
                     c.execute(
-                        "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
+                        "SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND is_active = 1",
                         ("admin",),
                     )
                 row = c.fetchone()
@@ -48,9 +48,12 @@ def get_current_user(request: Request) -> dict:
         else:
             with get_db() as conn:
                 c = conn.cursor()
-                c.execute(f"SELECT id, username FROM users WHERE id = {P}", (user_id,))
+                c.execute(
+                    f"SELECT id, username, is_active FROM users WHERE id = {P}",
+                    (user_id,),
+                )
                 user = c.fetchone()
-                if not user:
+                if not user or not user[2]:
                     raise HTTPException(status_code=401, detail="User not found")
                 account = {"id": user[0], "username": user[1], "role": "user"}
 

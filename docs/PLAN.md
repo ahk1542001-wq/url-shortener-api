@@ -10,12 +10,14 @@
 6. **PostgreSQL support** — Add `DATABASE_URL` env var, dynamic placeholders for SQLite/PostgreSQL, `_fmt_dt()` helper for datetime formatting.
 7. **Frontend Evolution** — Clean single-page application using vanilla JS with separate Shortener and Link Tree workspaces, desktop sidebar navigation, sticky mobile top navigation, and a dynamic public Tree page (`/u/{username}`).
 8. **Docs** — README, SPEC, PLAN, SHIP, report.md, wiki/ (architecture, patterns, decisions).
+9. **Admin Operations** — Add account-owned data summaries, username updates, one-way password reset, immediate enable/disable controls, and transactional deletion while protecting the environment-managed admin identity.
 
 ## What "Good" Looks Like
 
 - Fully modular backend in `src/routers/`.
 - Every endpoint returns structured JSON errors.
 - JWT token required for operations. Admin endpoints protected.
+- Disabled accounts lose login and existing-token access; no endpoint exposes stored password hashes.
 - Link history and multi-profile support.
 - Security headers on every response.
 - No secrets in repo.

@@ -13,6 +13,7 @@ Your primary goal is to ensure that the `POST /api/shorten`, `GET /<code>`, and 
 5. Send a GET request to the returned short code and ensure it returns a 302 Redirect to the original URL.
 6. Send a GET request to `/api/stats/<code>` and verify that the `click_count` has incremented.
 7. Send an invalid POST request (missing or malformed URL) with the Bearer token and verify the 422 error schema is returned.
+8. With an admin token and a disposable normal account, verify user detail totals, password reset, immediate disablement of an existing JWT, re-enable, and transactional deletion. Never request or print an existing password hash.
 
 ## Skills to Apply
 - Use the `@url-api-contract` skill to reference the exact payload formats and status codes required.

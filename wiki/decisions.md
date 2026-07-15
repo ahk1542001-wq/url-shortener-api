@@ -28,3 +28,7 @@
 ## 7. Brand Palette
 - **Decision**: Use Olive Ink (`#2F3A1D`) for brand surfaces and Warm Lime (`#CFFF74`) for primary actions and active states.
 - **Reasoning**: The pairing provides a recognizable, high-contrast identity across light and dark system themes.
+
+## 8. Administrator User Management
+- **Decision**: Let administrators inspect aggregate account-owned application data and manage normal account identity, password reset, status, and deletion from one dedicated view.
+- **Reasoning**: Admin-created accounts need a recovery path, but existing bcrypt passwords must remain unreadable. Enforcing `is_active` during both login and JWT resolution makes disablement immediate, while protecting the environment-managed `admin` identity prevents the UI from breaking deployment access.

@@ -37,6 +37,30 @@ def run_migrations(conn):
             )
         """)
 
+    # Version 2 adds account status without disturbing the legacy URL migration.
+    # It runs independently so databases that already recorded version 1 are upgraded.
+    cur.execute("SELECT version FROM schema_versions WHERE version = 2")
+    if not cur.fetchone() and check_table_exists(conn, "users"):
+        if USE_POSTGRES:
+            cur.execute("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'users'
+                  AND column_name = 'is_active'
+            """)
+            if not cur.fetchone():
+                cur.execute(
+                    "ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE"
+                )
+        else:
+            cur.execute("PRAGMA table_info(users)")
+            if "is_active" not in {row[1] for row in cur.fetchall()}:
+                cur.execute(
+                    "ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1"
+                )
+        cur.execute("INSERT INTO schema_versions (version) VALUES (2)")
+
     cur.execute("SELECT version FROM schema_versions WHERE version = 1")
     if cur.fetchone():
         return  # Already migrated

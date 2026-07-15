@@ -67,6 +67,15 @@ def test_avatar_upload_reads_structured_api_errors():
     assert "data.error?.message || data.detail || 'Upload failed'" in SCRIPT
 
 
+def test_admin_user_management_never_exposes_existing_passwords():
+    assert 'id="admin-user-detail-view"' in INDEX
+    assert 'id="admin-edit-password"' in INDEX
+    assert "Existing passwords cannot be viewed" in INDEX
+    assert "method: 'PATCH'" in SCRIPT
+    assert "method: 'DELETE'" in SCRIPT
+    assert "hashed_password" not in SCRIPT
+
+
 def test_public_tree_link_cards_keep_icons_compact():
     assert ".link-arrow" in TREE
     assert "width: 18px" in TREE

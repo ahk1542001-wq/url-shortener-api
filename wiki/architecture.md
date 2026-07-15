@@ -50,6 +50,15 @@ The backend is built with Python 3.11 and FastAPI, chosen for its asynchronous c
 3. Backend generates a JSON Web Token (JWT) signed with `JWT_SECRET` and returns it.
 4. Client attaches the token as a header (`Authorization: Bearer <token>`) to all subsequent secure requests.
 5. FastAPI's `get_current_user` dependency intercepts requests, decodes the JWT, and rejects invalid/expired tokens with a `401 Unauthorized` response.
+6. Normal-account lookups also require `users.is_active`; disabling an account therefore blocks both new logins and previously issued JWTs.
+
+### Administrator Boundary
+
+The environment-managed `admin` identity can create normal accounts and review
+their profile, link, click, and view totals. Admin-only detail endpoints support
+renaming, one-way password reset, enable/disable, and transactional deletion of
+normal accounts. They never return `hashed_password`, and they reject attempts
+to edit or delete the protected `admin` identity.
 
 ## 4. Database Schema (Multi-Tenant)
 
@@ -66,6 +75,7 @@ erDiagram
         int id PK
         string username
         string password_hash
+        boolean is_active
     }
 
     PROFILES {
@@ -104,6 +114,7 @@ erDiagram
 - **Link Tree Mode**: Links created within a profile are assigned a `profile_id`, determining which links appear on the public `/api/users/{username}/tree` page.
 - **Daily Stats**: Aggregate counts of clicks grouped by day. The foreign key `link_id` references `links(id)` with `ON DELETE CASCADE`.
 - **Avatar Storage**: Avatars are stored in Cloudinary. The `profiles.avatar_url` is the secure delivery URL and the legacy-named `profiles.avatar_object_key` column stores the UUID-based Cloudinary `public_id` used for deletion.
+- **Account Status**: `users.is_active` defaults to true. Authentication and JWT-backed user resolution both enforce it so an administrator can revoke access immediately.
 - **Schema Migration Version**: Handled via the `schema_versions` table which keeps track of applied database migration scripts.
 
 ## 5. Security & Protection Mechanisms

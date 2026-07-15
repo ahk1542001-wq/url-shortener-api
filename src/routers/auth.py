@@ -32,12 +32,12 @@ def login(req: LoginRequest):
     with get_db() as conn:
         c = conn.cursor()
         c.execute(
-            f"SELECT id, hashed_password FROM users WHERE username = {P}",
+            f"SELECT id, hashed_password, is_active FROM users WHERE username = {P}",
             (req.username,),
         )
         user = c.fetchone()
 
-        if not user or not pwd_context.verify(req.password, user[1]):
+        if not user or not user[2] or not pwd_context.verify(req.password, user[1]):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
         token = jwt.encode(
