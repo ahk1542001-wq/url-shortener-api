@@ -42,6 +42,7 @@ def init_db(db_path: str = None):
                     id SERIAL PRIMARY KEY,
                     username TEXT UNIQUE NOT NULL,
                     hashed_password TEXT NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -82,6 +83,11 @@ def init_db(db_path: str = None):
                 )
             """)
 
+            # Upgrade existing schemas before queries reference newly added columns.
+            from src.migration import run_migrations
+
+            run_migrations(conn)
+
             # Create/upsert admin user and profile
             admin_pwd_hash = config.ADMIN_PASSWORD_HASH or "dummy"
             cur.execute(
@@ -89,7 +95,8 @@ def init_db(db_path: str = None):
                 INSERT INTO users (username, hashed_password)
                 VALUES (%s, %s)
                 ON CONFLICT (username) DO UPDATE
-                SET hashed_password = EXCLUDED.hashed_password
+                SET hashed_password = EXCLUDED.hashed_password,
+                    is_active = TRUE
             """,
                 ("admin", admin_pwd_hash),
             )
@@ -105,10 +112,6 @@ def init_db(db_path: str = None):
                 (admin_uid,),
             )
 
-            # Run migrations after creating base tables
-            from src.migration import run_migrations
-
-            run_migrations(conn)
     else:
         with get_db(db_path) as conn:
             conn.execute("""
@@ -116,6 +119,7 @@ def init_db(db_path: str = None):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     hashed_password TEXT NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT 1,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -156,6 +160,11 @@ def init_db(db_path: str = None):
                 )
             """)
 
+            # Upgrade existing schemas before queries reference newly added columns.
+            from src.migration import run_migrations
+
+            run_migrations(conn)
+
             # Create/upsert admin user
             c = conn.cursor()
             c.execute("SELECT id FROM users WHERE LOWER(username) = 'admin'")
@@ -164,7 +173,7 @@ def init_db(db_path: str = None):
             if row:
                 admin_uid = row[0]
                 c.execute(
-                    "UPDATE users SET hashed_password = ? WHERE id = ?",
+                    "UPDATE users SET hashed_password = ?, is_active = 1 WHERE id = ?",
                     (admin_pwd_hash, admin_uid),
                 )
             else:
@@ -181,8 +190,3 @@ def init_db(db_path: str = None):
                     "INSERT INTO profiles (user_id, username, bio) VALUES (?, ?, ?)",
                     (admin_uid, "admin", "Admin Profile"),
                 )
-
-            # Run migrations after creating base tables
-            from src.migration import run_migrations
-
-            run_migrations(conn)

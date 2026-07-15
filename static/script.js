@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const createProfileView = document.getElementById('create-profile-view');
     const adminView = document.getElementById('admin-view');
     const adminCreateUserView = document.getElementById('admin-create-user-view');
+    const adminUserDetailView = document.getElementById('admin-user-detail-view');
 
     let isStandaloneMode = false;
 
@@ -143,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         createProfileView.classList.add('hidden');
         if (adminView) adminView.classList.add('hidden');
         if (adminCreateUserView) adminCreateUserView.classList.add('hidden');
+        if (adminUserDetailView) adminUserDetailView.classList.add('hidden');
 
         // Hide top sticky nav by default
         document.getElementById('main-top-nav')?.classList.add('hidden');
@@ -301,6 +303,28 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('top-nav-admin-back')?.classList.remove('hidden');
     }
 
+    let currentAdminUserId = null;
+    let currentAdminUserIsProtected = false;
+
+    function showAdminUserDetail(userId) {
+        hideAllViews();
+        adminUserDetailView.classList.remove('hidden');
+        navLoginBtn.classList.add('hidden');
+        headerSubtitle.style.display = 'none';
+        const mainHeader = document.getElementById('main-header');
+        if (mainHeader) mainHeader.style.display = 'none';
+
+        document.getElementById('main-top-nav')?.classList.remove('hidden');
+        document.body.classList.add('top-nav-visible');
+        document.getElementById('top-nav-shortener')?.classList.add('hidden');
+        document.getElementById('top-nav-tree')?.classList.add('hidden');
+        document.getElementById('top-nav-admin')?.classList.remove('hidden');
+        document.getElementById('top-nav-admin-users')?.classList.add('hidden');
+        document.getElementById('top-nav-admin-back')?.classList.remove('hidden');
+
+        loadAdminUserDetail(userId);
+    }
+
     if (document.getElementById('admin-add-user-btn')) {
         document.getElementById('admin-add-user-btn').addEventListener('click', showAdminCreateUser);
     }
@@ -310,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('nav-admin-back')) {
         document.getElementById('nav-admin-back').addEventListener('click', showAdminDashboard);
     }
+    document.getElementById('nav-admin-detail-back')?.addEventListener('click', showAdminDashboard);
 
     const adminLogoutLinks = document.querySelectorAll('.logout-link');
     adminLogoutLinks.forEach(link => {
@@ -385,17 +410,157 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             list.innerHTML = data.users.map(u => `
-                <div class="link-item" style="display:flex; justify-content:space-between; align-items:center;">
+                <button type="button" class="admin-user-row" data-admin-user-id="${Number(u.id)}" aria-label="Manage ${escapeHtml(u.username)}">
                     <div>
-                        <div class="link-code">${escapeHtml(u.username)} <span style="font-size: 0.8rem; color: var(--text-muted);">(${u.profile_count} profiles)</span></div>
+                        <div class="link-code">${escapeHtml(u.username)} ${u.is_admin ? '<span class="admin-status-badge">Admin</span>' : ''}</div>
                         <div class="link-date">Created: ${escapeHtml(u.created_at)}</div>
+                        <div class="admin-user-metrics">
+                            <span>${Number(u.profile_count)} profiles</span>
+                            <span>${Number(u.link_count)} links</span>
+                            <span>${Number(u.total_clicks)} clicks</span>
+                            <span class="${u.is_active ? '' : 'admin-status-badge inactive'}">${u.is_active ? 'Active' : 'Disabled'}</span>
+                        </div>
                     </div>
-                </div>
+                    <span class="admin-manage-label">Manage →</span>
+                </button>
             `).join('');
         } catch(err) {
             list.innerHTML = '<p class="text-muted text-center">Error loading users</p>';
         }
     }
+
+    document.getElementById('admin-users-list')?.addEventListener('click', (event) => {
+        const row = event.target.closest('[data-admin-user-id]');
+        if (!row) return;
+        const userId = Number(row.dataset.adminUserId);
+        if (Number.isInteger(userId) && userId > 0) showAdminUserDetail(userId);
+    });
+
+    async function loadAdminUserDetail(userId) {
+        const summary = document.getElementById('admin-user-summary');
+        const profiles = document.getElementById('admin-user-profiles');
+        const error = document.getElementById('admin-edit-user-error');
+        summary.innerHTML = '<p class="text-muted">Loading account summary...</p>';
+        profiles.innerHTML = '<p class="text-muted">Loading profiles...</p>';
+        error.classList.add('hidden');
+
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, { headers: headers() });
+            if (handle401(response)) return;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Failed to load user');
+
+            const user = data.user;
+            currentAdminUserId = Number(user.id);
+            currentAdminUserIsProtected = Boolean(user.is_admin);
+
+            document.getElementById('admin-detail-title').textContent = user.username;
+            const status = document.getElementById('admin-detail-status');
+            status.textContent = user.is_active ? 'Active' : 'Disabled';
+            status.classList.toggle('inactive', !user.is_active);
+
+            const username = document.getElementById('admin-edit-username');
+            const password = document.getElementById('admin-edit-password');
+            const active = document.getElementById('admin-edit-active');
+            username.value = user.username;
+            password.value = '';
+            active.checked = Boolean(user.is_active);
+            username.disabled = currentAdminUserIsProtected;
+            password.disabled = currentAdminUserIsProtected;
+            active.disabled = currentAdminUserIsProtected;
+            document.getElementById('admin-save-user-btn').classList.toggle('hidden', currentAdminUserIsProtected);
+            document.getElementById('admin-delete-user-btn').classList.toggle('hidden', currentAdminUserIsProtected);
+            document.getElementById('admin-protected-note').classList.toggle('hidden', !currentAdminUserIsProtected);
+
+            summary.innerHTML = `
+                <div class="admin-summary-item"><span class="admin-summary-value">${Number(user.profile_count)}</span><span class="admin-summary-label">Profiles</span></div>
+                <div class="admin-summary-item"><span class="admin-summary-value">${Number(user.link_count)}</span><span class="admin-summary-label">Links</span></div>
+                <div class="admin-summary-item"><span class="admin-summary-value">${Number(user.total_clicks)}</span><span class="admin-summary-label">Clicks</span></div>
+            `;
+
+            profiles.innerHTML = user.profiles.length ? user.profiles.map(profile => `
+                <div class="admin-profile-row">
+                    <div>
+                        <strong>@${escapeHtml(profile.username)}</strong>
+                        <div class="link-date">Created: ${escapeHtml(profile.created_at)}</div>
+                    </div>
+                    <div class="admin-profile-stats">
+                        <div>${Number(profile.tree_views)} views</div>
+                        <div>${Number(profile.link_count)} links · ${Number(profile.total_clicks)} clicks</div>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-muted">This account has no Link Tree profiles yet.</p>';
+        } catch (err) {
+            summary.innerHTML = '<p class="text-muted">Could not load account data.</p>';
+            profiles.innerHTML = '<p class="text-muted">No profile data available.</p>';
+            error.textContent = getFriendlyErrorMessage(err);
+            error.classList.remove('hidden');
+        }
+    }
+
+    document.getElementById('admin-edit-user-form')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!currentAdminUserId || currentAdminUserIsProtected) return;
+
+        const username = document.getElementById('admin-edit-username');
+        const password = document.getElementById('admin-edit-password');
+        const active = document.getElementById('admin-edit-active');
+        const submit = document.getElementById('admin-save-user-btn');
+        const error = document.getElementById('admin-edit-user-error');
+        const payload = {
+            username: username.value.trim(),
+            is_active: active.checked
+        };
+        if (password.value) payload.password = password.value;
+
+        error.classList.add('hidden');
+        submit.disabled = true;
+        try {
+            const response = await fetch(`/api/admin/users/${currentAdminUserId}`, {
+                method: 'PATCH',
+                headers: headers(),
+                body: JSON.stringify(payload)
+            });
+            if (handle401(response)) return;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Failed to update user');
+            showToast('User updated successfully', 'success');
+            await loadAdminUserDetail(currentAdminUserId);
+        } catch (err) {
+            error.textContent = getFriendlyErrorMessage(err);
+            error.classList.remove('hidden');
+        } finally {
+            submit.disabled = false;
+        }
+    });
+
+    document.getElementById('admin-delete-user-btn')?.addEventListener('click', async () => {
+        if (!currentAdminUserId || currentAdminUserIsProtected) return;
+        const username = document.getElementById('admin-edit-username').value.trim();
+        if (!window.confirm(`Delete ${username} and all owned profiles, links, and analytics? This cannot be undone.`)) return;
+
+        const button = document.getElementById('admin-delete-user-btn');
+        const error = document.getElementById('admin-edit-user-error');
+        button.disabled = true;
+        error.classList.add('hidden');
+        try {
+            const response = await fetch(`/api/admin/users/${currentAdminUserId}`, {
+                method: 'DELETE',
+                headers: headers()
+            });
+            if (handle401(response)) return;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Failed to delete user');
+            showToast('User deleted', 'success');
+            currentAdminUserId = null;
+            showAdminDashboard();
+        } catch (err) {
+            error.textContent = getFriendlyErrorMessage(err);
+            error.classList.remove('hidden');
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     document.getElementById('cancel-create-profile-btn').addEventListener('click', () => {
         if (window.appProfiles?.length) showProfileSelection();

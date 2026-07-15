@@ -38,6 +38,14 @@ Headers: { "Authorization": "Bearer <token>" }
 Input: multipart/form-data with file
 Output: { "message": "Avatar uploaded successfully", "avatar_url": "https://..." }
 
+# Admin User Detail and Recovery
+GET /api/admin/users/{id}
+PATCH /api/admin/users/{id}
+DELETE /api/admin/users/{id}
+Headers: { "Authorization": "Bearer <admin-token>" }
+PATCH input: { "username": "optional", "password": "optional replacement", "is_active": true }
+Never return an existing password or `hashed_password`.
+
 # Redirect
 GET /<code>
 Redirects to original_url with 302 Found.

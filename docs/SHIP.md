@@ -3,7 +3,7 @@
 ## Pre-Launch Checklist
 
 ### Code Quality
-- [x] Local test suite passes (73 passed, 1 optional PostgreSQL test skipped)
+- [x] Local test suite passes (80 passed, 1 optional PostgreSQL test skipped)
 - [x] Lint passes (`ruff check .`)
 - [x] Format passes (`ruff format --check .`)
 - [x] No TODO/FIXME comments
@@ -19,20 +19,24 @@
 - [x] XSS protection — all user-supplied content escaped via `escapeHtml()` before DOM insertion
 - [x] Structured error responses (no internal details leaked)
 - [x] `.env`, `.mcp.json`, and `shortener.db` in `.gitignore`
+- [x] Existing passwords and password hashes are never returned by admin APIs
+- [x] Disabled accounts are rejected during login and JWT-backed requests
+- [x] Environment-managed admin identity cannot be edited or deleted
 
 ### Infrastructure
 - [x] Environment variables documented (`.env.example`)
 - [x] Health check endpoint (`GET /api/health` → `{"status": "ok"}`)
 - [x] Database auto-creates on startup (SQLite local, Neon PostgreSQL in production)
 - [x] Config loaded from environment with sensible defaults
-- [x] Deployed to Render with Neon PostgreSQL (free, permanent)
+- [x] Deployed to Render with Neon PostgreSQL
 
 ### Documentation
 - [x] README with setup, API docs, env vars, deploy instructions
 - [x] `.env.example` as template
 - [x] `SPEC.md` with requirements
 - [x] `PLAN.md` with implementation plan
-- [x] `slides/pitch.md` — Marp presentation source and exported PDF
+- [x] `slides/pitch.md` — Markdown/Marp presentation source
+- [x] `docs/SCREENSHOTS.md` — indexed desktop/mobile screenshot evidence
 - [x] `report.md` — all fields filled
 
 ## What's In This Ship
@@ -53,6 +57,7 @@
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
 | Multi-User Auth | Working (JWT token, admin-created accounts, centralized auth helper) |
+| Admin user management | Working (owned-data summary, rename, password reset, enable/disable, transactional delete) |
 | XSS protection | Working (escapeHtml on all user content in innerHTML) |
 | Link Trees | Working (Up to five selectable public profiles per account) |
 | Link Tree Avatars | Working (Image upload to Cloudinary) |
@@ -60,12 +65,13 @@
 | Standalone mode | Working (Links without a profile) |
 | Local QR generation | Working (vendored browser library; no external QR request) |
 | Responsive navigation | Working (desktop sidebar and sticky mobile top navigation) |
-| PostgreSQL support | Working (Neon free tier, permanent storage) |
-| Tests | 73 passing locally; one guarded PostgreSQL integration test optional |
+| PostgreSQL support | Working (managed Neon PostgreSQL) |
+| Tests | 80 passing locally; one guarded PostgreSQL integration test optional |
+| Screenshot coverage | 33 PNG captures across 17 major states and two viewports |
 
 ## Deployment & Rehearsal
 
-**Stack:** Render (free hosting) + Neon PostgreSQL (free, permanent database) + Cloudinary (avatar storage)
+**Stack:** Render Web Service + Neon PostgreSQL + Cloudinary avatar storage
 
 **Live at:** https://swoo-sh.onrender.com
 
@@ -105,7 +111,24 @@
 1. `curl https://swoo-sh.onrender.com/api/health` → `{"status": "ok"}`
 2. Open in browser → landing page and login flow appear
 3. Sign in with an admin-created account → feature selection appears
-4. Create a standalone short URL → copy, QR, redirect, edit, delete, and analytics work
-5. Create and switch among Link Tree profiles → public pages and profile analytics remain isolated
-6. Upload an avatar when Cloudinary is configured
-7. Verify desktop and mobile navigation, then log out
+4. As admin, open a normal account → owned-data totals appear; test rename/password reset/status with a disposable account
+5. Create a standalone short URL → copy, QR, redirect, edit, delete, and analytics work
+6. Create and switch among Link Tree profiles → public pages and profile analytics remain isolated
+7. Upload an avatar when Cloudinary is configured
+8. Verify desktop and mobile navigation, then log out
+
+### Verified Deployment Evidence
+
+- Render is connected to the GitHub `main` branch with automatic deployment.
+- The Docker service reports a live deployment and uses `/api/health` as its health check.
+- On 2026-07-16, the live health endpoint returned HTTP `200` with `{"status":"ok"}`.
+- The landing page returned HTTP `200` over HTTPS.
+- A generated QR screenshot was decoded with a barcode detector and returned the expected short-link URL.
+- Final release acceptance still requires the authenticated workflow checks above after every production deployment.
+
+### Screenshot Evidence
+
+The complete UI evidence set is indexed in [`docs/SCREENSHOTS.md`](SCREENSHOTS.md).
+Screenshots are generated from a disposable demo database, not production data,
+so no credentials or private information are committed. Production behavior is
+validated separately through the post-deployment checklist.

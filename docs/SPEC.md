@@ -33,6 +33,7 @@ Format:  ruff format .
 | Feature | Description |
 |---------|-------------|
 | Multi-User Auth | POST /api/login → returns JWT token |
+| Admin User Management | Inspect account-owned data totals; rename, reset, disable, or delete normal accounts |
 | Shorten URLs | POST /api/shorten → returns 6-char code |
 | Custom codes | Optional, 3-20 chars, alphanumeric + hyphens |
 | Link Tree Profiles | POST /api/profiles → Create and switch among up to five public link-in-bio pages |
@@ -69,6 +70,9 @@ Format:  ruff format .
 - **Security headers** — on every response
 - **Centralized auth handling** — `handle401()` helper used across all authenticated fetch calls
 - **No secrets in code** — all secrets in env vars (`JWT_SECRET`, `ADMIN_PASSWORD_HASH`)
+- **One-way passwords** — admin responses never expose password hashes or existing passwords; administrators can only set a replacement password
+- **Immediate disablement** — inactive accounts cannot log in and their existing JWTs are rejected on later requests
+- **Protected admin identity** — the environment-managed `admin` account cannot be edited or deleted through normal user-management endpoints
 
 ## Testing Strategy
 
@@ -80,6 +84,7 @@ Format:  ruff format .
 ## Boundaries
 
 - **UI product boundary:** The frontend exposes two distinct workspaces: Shortener and Link Tree. Each login account can create, select, and manage up to five Link Tree profiles. Standalone short links remain separate from profile Link Trees.
+- **Admin boundary:** Public registration remains disabled. Administrators may inspect aggregate user-owned application data and manage normal accounts, but they cannot retrieve plaintext passwords or modify the environment-managed admin identity.
 - **Brand palette:** Olive Ink (`#2F3A1D`) is the main brand surface and Warm Lime (`#CFFF74`) is reserved for primary actions and active states.
 
 - **Always:** Run `pytest` before committing, validate all inputs, use parameterized SQL, handle DB connections with context managers

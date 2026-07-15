@@ -10,6 +10,9 @@
 [Live demo](https://swoo-sh.onrender.com) | [API docs](https://swoo-sh.onrender.com/docs) | [Report an issue](https://github.com/ahk1542001-wq/url-shortener-api/issues)
 
 > Accounts are created by an administrator. Public self-registration is intentionally disabled.
+> Administrators can review account-owned profile/link totals, rename users,
+> reset passwords, disable access, and delete user-owned application data.
+> Existing passwords are never displayed because bcrypt hashes are one-way.
 
 ## What Can I Do With It?
 
@@ -26,15 +29,26 @@ Each login account can create **up to five Link Tree profiles**. Standalone shor
 
 ## Product Tour
 
-| Landing and feature selection | Link management |
+| Landing page | Choose a workspace |
 |---|---|
-| ![Swoosh landing page](screenshots/01_landing_desktop.png) | ![Swoosh link dashboard](screenshots/05_dashboard_populated_desktop.png) |
+| ![Swoosh landing page](screenshots/01_landing_desktop.png) | ![Swoosh feature selection](screenshots/05_feature_selection_desktop.png) |
 
-| Link Tree workspace | Public Link Tree |
+| Short-link portfolio | Local QR sharing |
 |---|---|
-| ![Swoosh Link Tree dashboard](screenshots/08_tree_dashboard_populated_desktop.png) | ![Swoosh public profile](screenshots/09_public_tree_desktop.png) |
+| ![Swoosh link portfolio](screenshots/09_portfolio_desktop.png) | ![Swoosh QR modal](screenshots/10_qr_modal_desktop.png) |
 
-Mobile screenshots are available in [`screenshots/`](screenshots/).
+| Link Tree profiles | Public Link Tree |
+|---|---|
+| ![Swoosh profile selection](screenshots/06_profile_selection_desktop.png) | ![Swoosh public profile](screenshots/16_public_tree_desktop.png) |
+
+| Admin user list | Admin account management |
+|---|---|
+| ![Swoosh admin users](screenshots/03_admin_users_desktop.png) | ![Swoosh admin account management](screenshots/04_admin_user_management_desktop.png) |
+
+The repository contains a **33-image desktop and mobile screenshot set** covering
+login, administration, both workspaces, profile management, QR codes, analytics,
+and the public page. See the indexed gallery and regeneration instructions in
+[`docs/SCREENSHOTS.md`](docs/SCREENSHOTS.md).
 
 ## Features
 
@@ -43,7 +57,7 @@ Mobile screenshots are available in [`screenshots/`](screenshots/).
 | Short links | Generated codes, custom vanity codes, copy, edit, delete, and QR display |
 | Analytics | Redirect click totals, daily statistics, and Link Tree visit counts |
 | Link Trees | Up to five profiles per account, profile switching, bio, avatar, and social links |
-| Accounts | JWT login, bcrypt password hashes, and admin-created users |
+| Accounts | JWT login, bcrypt password hashes, admin-created users, status controls, password reset, and owned-data summaries |
 | Storage | SQLite for local development and Neon PostgreSQL for production |
 | Avatar media | Validated image uploads stored in Cloudinary |
 | Security | Input validation, rate limiting, security headers, reserved routes, and structured errors |
@@ -117,6 +131,10 @@ Open:
 - Health check: `http://127.0.0.1:8000/api/health`
 
 The configured `admin` account is created or updated during database initialization. Use the admin dashboard to create normal user accounts.
+The same dashboard can inspect each account's profile, link, click, and view
+summary; rename or disable a normal account; reset its password; or delete its
+owned application data. The environment-managed `admin` account is protected
+from editing and deletion.
 
 ### Enable Avatar Uploads
 
@@ -154,6 +172,8 @@ All private endpoints require `Authorization: Bearer <token>`. Profile-specific 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/api/login` | Authenticate and receive a JWT |
+| `GET` / `POST` | `/api/admin/users` | List accounts or create a normal account (admin only) |
+| `GET` / `PATCH` / `DELETE` | `/api/admin/users/{id}` | Inspect, update, disable, reset, or delete a normal account (admin only) |
 | `GET` | `/api/profiles` | List the account's profiles and profile limit |
 | `POST` | `/api/profiles` | Create a Link Tree profile |
 | `GET` / `PUT` | `/api/me` | Read or update the active profile |
@@ -216,7 +236,7 @@ The reference deployment uses Render, Neon PostgreSQL, and Cloudinary.
 3. Create a Render web service from this repository using the included Dockerfile or `render.yaml`.
 4. Set `DATABASE_URL`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, and the optional Cloudinary variables.
 5. Before a migration, create a Neon branch or snapshot and rehearse against a disposable test branch.
-6. Deploy and verify `/api/health`, login, shortening, redirect, profile switching, public Link Tree, analytics, and avatar upload.
+6. Deploy and verify `/api/health`, admin user management, normal-user login, shortening, redirect, profile switching, public Link Tree, analytics, and avatar upload.
 
 See [`docs/SHIP.md`](docs/SHIP.md) for the complete deployment and rollback checklist.
 
@@ -229,7 +249,8 @@ tests/        API, migration, security, UI contract, and lifecycle tests
 docs/         Specification, plan, ship checklist, and project report
 wiki/         Architecture, decisions, and implementation patterns
 screenshots/  Desktop and mobile product screenshots
-slides/       Marp presentation source and exported PDF
+scripts/      Reproducible documentation screenshot automation
+slides/       Markdown/Marp presentation sources
 ```
 
 ## Contributing

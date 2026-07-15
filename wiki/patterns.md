@@ -25,3 +25,6 @@
 - Validate all incoming URLs via Pydantic (`validators`).
 - Set security headers on all responses via the `security_headers` middleware in `src/main.py`.
 - Authentication is handled via JWT Bearer tokens passed in the `Authorization` header.
+- Never return `hashed_password` or imply that an existing password can be viewed. Admin password changes are one-way resets.
+- Recheck `users.is_active` while resolving every normal-user JWT so account disablement takes effect immediately.
+- Protect the environment-managed `admin` identity from edit and delete operations.
