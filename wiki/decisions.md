@@ -18,5 +18,13 @@
 - **Reasoning**: To support Link Trees and multiple profiles independently, the application requires individual user accounts. JWT provides a stateless, scalable way to authenticate API requests without relying on server-side session storage.
 
 ## 5. UI Layout
-- **Decision**: Adaptive Desktop Sidebar and Mobile Dock.
-- **Reasoning**: To support a richer feature set (Dashboard vs Link Trees), we moved away from a single centered card to a responsive layout that utilizes a persistent navigation structure, providing a more premium app-like experience.
+- **Decision**: Separate Shortener and Link Tree workspaces with an adaptive desktop sidebar and sticky mobile top navigation.
+- **Reasoning**: The feature separation keeps link management and public-profile editing understandable. Moving mobile navigation to the top prevents it from covering content and action buttons.
+
+## 6. Link Tree Product Boundary
+- **Decision**: Allow each login account to create, select, and manage up to five Link Tree profiles.
+- **Reasoning**: A profile chooser supports separate public identities while the five-profile cap keeps the class-project UI and data model manageable.
+
+## 7. Brand Palette
+- **Decision**: Use Olive Ink (`#2F3A1D`) for brand surfaces and Warm Lime (`#CFFF74`) for primary actions and active states.
+- **Reasoning**: The pairing provides a recognizable, high-contrast identity across light and dark system themes.

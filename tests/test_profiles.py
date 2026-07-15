@@ -59,3 +59,24 @@ def test_update_profile_invalid_social_links(normal_auth_client):
 
     # Should be rejected by pydantic regex validation
     assert r.status_code == 422
+
+
+def test_account_can_create_up_to_five_profiles(normal_auth_client):
+    for number in range(1, 6):
+        response = normal_auth_client.post(
+            "/api/profiles", json={"username": f"profile-{number}"}
+        )
+        assert response.status_code == 200
+
+    profiles_response = normal_auth_client.get("/api/profiles")
+    assert profiles_response.status_code == 200
+    assert len(profiles_response.json()["profiles"]) == 5
+    assert profiles_response.json()["max_profiles"] == 5
+
+    sixth_response = normal_auth_client.post(
+        "/api/profiles", json={"username": "profile-6"}
+    )
+    assert sixth_response.status_code == 400
+    assert sixth_response.json()["error"]["message"] == (
+        "Maximum of 5 profiles allowed per account"
+    )

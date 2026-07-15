@@ -35,6 +35,7 @@ def configure_cloudinary():
 
 router = APIRouter(prefix="/api")
 P = _placeholder()
+MAX_PROFILES_PER_ACCOUNT = 5
 
 
 @router.get("/profiles")
@@ -64,7 +65,7 @@ def get_profiles(user: dict = Depends(get_current_user)):
                     "social_links": sl,
                 }
             )
-    return {"profiles": profiles}
+    return {"profiles": profiles, "max_profiles": MAX_PROFILES_PER_ACCOUNT}
 
 
 @router.post("/profiles")
@@ -77,9 +78,10 @@ def create_profile(req: CreateProfileRequest, user: dict = Depends(get_current_u
             (user["account"]["id"],),
         )
         count = c.fetchone()[0]
-        if count >= 5:
+        if count >= MAX_PROFILES_PER_ACCOUNT:
             raise HTTPException(
-                status_code=400, detail="Maximum of 5 profiles allowed per account"
+                status_code=400,
+                detail=f"Maximum of {MAX_PROFILES_PER_ACCOUNT} profiles allowed per account",
             )
 
         # Check uniqueness
@@ -190,7 +192,7 @@ def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_current
         raise HTTPException(status_code=400, detail="Invalid image file.")
 
     if not configure_cloudinary():
-        raise HTTPException(status_code=500, detail="Cloud storage not configured.")
+        raise HTTPException(status_code=503, detail="Avatar storage is not configured.")
 
     public_id = f"avatars/{uuid.uuid4()}"
 

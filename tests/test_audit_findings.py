@@ -353,6 +353,24 @@ def mock_cloudinary(monkeypatch):
         yield uploader
 
 
+def test_avatar_upload_without_storage_returns_service_unavailable(auth_client):
+    avatar_file = io.BytesIO(b"dummy image bytes")
+    with patch("PIL.Image.open") as mock_open:
+        mock_img = MagicMock()
+        mock_img.width = 100
+        mock_img.height = 100
+        mock_img.mode = "RGB"
+        mock_open.return_value = mock_img
+
+        response = auth_client.post(
+            "/api/profiles/avatar",
+            files={"file": ("avatar.jpg", avatar_file, "image/jpeg")},
+        )
+
+    assert response.status_code == 503
+    assert response.json()["error"]["message"] == "Avatar storage is not configured."
+
+
 def test_avatar_upload_cloudinary_failure(mock_cloudinary, auth_client):
     mock_cloudinary.upload.side_effect = Exception("Upload to Cloudinary failed")
 

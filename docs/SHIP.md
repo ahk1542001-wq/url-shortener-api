@@ -3,7 +3,7 @@
 ## Pre-Launch Checklist
 
 ### Code Quality
-- [x] All tests pass (23/23)
+- [x] Local test suite passes (73 passed, 1 optional PostgreSQL test skipped)
 - [x] Lint passes (`ruff check .`)
 - [x] Format passes (`ruff format --check .`)
 - [x] No TODO/FIXME comments
@@ -32,7 +32,7 @@
 - [x] `.env.example` as template
 - [x] `SPEC.md` with requirements
 - [x] `PLAN.md` with implementation plan
-- [x] `slides/pitch.md` — 6 Marp slides, 20s auto-advance
+- [x] `slides/pitch.md` — Marp presentation source and exported PDF
 - [x] `report.md` — all fields filled
 
 ## What's In This Ship
@@ -52,14 +52,16 @@
 | Security headers | Working |
 | Structured errors | Working |
 | Input validation | Working (URL, custom code, length limits) |
-| Multi-User Auth | Working (JWT token, user registration, centralized auth helper) |
+| Multi-User Auth | Working (JWT token, admin-created accounts, centralized auth helper) |
 | XSS protection | Working (escapeHtml on all user content in innerHTML) |
-| Link Trees | Working (Multiple public profiles per user) |
+| Link Trees | Working (Up to five selectable public profiles per account) |
 | Link Tree Avatars | Working (Image upload to Cloudinary) |
 | Copy short URLs | One-click copy in My Links with ✅ feedback |
 | Standalone mode | Working (Links without a profile) |
+| Local QR generation | Working (vendored browser library; no external QR request) |
+| Responsive navigation | Working (desktop sidebar and sticky mobile top navigation) |
 | PostgreSQL support | Working (Neon free tier, permanent storage) |
-| Tests | 23 passing |
+| Tests | 73 passing locally; one guarded PostgreSQL integration test optional |
 
 ## Deployment & Rehearsal
 
@@ -101,7 +103,9 @@
 ## Verification After Deploy
 
 1. `curl https://swoo-sh.onrender.com/api/health` → `{"status": "ok"}`
-2. Open in browser → password screen appears
-3. Enter password → shorten form + My Links visible
-4. Shorten a URL → short code returned
-5. Click logout → back to password screen
+2. Open in browser → landing page and login flow appear
+3. Sign in with an admin-created account → feature selection appears
+4. Create a standalone short URL → copy, QR, redirect, edit, delete, and analytics work
+5. Create and switch among Link Tree profiles → public pages and profile analytics remain isolated
+6. Upload an avatar when Cloudinary is configured
+7. Verify desktop and mobile navigation, then log out

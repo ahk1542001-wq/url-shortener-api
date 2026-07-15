@@ -6,7 +6,7 @@
 
 ## What It Does
 
-Swoosh is a self-hosted URL shortener API built with FastAPI. It features a complete multi-user authentication system where users (created by admin only, no public registration) can log in via JWT and manage their links securely. Swoosh supports two distinct modes: **Standalone Mode** (for private link shortening) and **Link Tree Mode** (for creating public, customizable profile pages that organize multiple links, with avatar images stored securely in Cloudinary). The project was hardened from an MVP to production quality using spec-driven development — adding input validation, rate limiting (30 req/min), security headers, structured error responses, deduplication (same URL returns same code), and full link lifecycle management. It supports both SQLite (local dev) and Neon PostgreSQL (free, permanent hosting). A premium glassmorphism frontend features a responsive Desktop Sidebar and Mobile Dock, adaptive Light/Dark themes, and playful empty states.
+Swoosh is an open-source URL shortener and link-in-bio builder built with FastAPI. Users (created by an administrator; no public registration) authenticate with JWT and work in two distinct areas: **Standalone Shortener** for private link management and **Link Tree** for public profile pages. Each account can create and switch among up to five Link Tree profiles with a bio, avatar, social links, public URL, visit counter, and local QR code. The project was hardened from an MVP with input validation, rate limiting (30 req/min), security headers, structured errors, URL deduplication, migrations, and full link lifecycle management. It supports SQLite for local development, Neon PostgreSQL for production, and Cloudinary for avatar storage. The responsive Olive Ink and Warm Lime interface uses a desktop sidebar and sticky mobile top navigation.
 
 ## How I Built It
 
@@ -14,9 +14,9 @@ I followed the **agent-skills lifecycle**: Spec → Plan → Build → Review �
 
 1. **Spec** — Wrote a structured spec covering objectives, validation rules, testing strategy, and boundaries.
 2. **Plan** — Broke the spec into 6 steps with a timeline and checklist, iteratively updating it for multi-user and Link Tree features.
-3. **Build** — Incrementally implemented: foundation (config, database modules) → refactor app.py into modular routers (`auth.py`, `links.py`, `profiles.py`) → UI implementation with Desktop Sidebar & Mobile Dock → rate limiting + security headers → tests → docs.
+3. **Build** — Incrementally implemented: foundation (config, database modules) → modular routers (`auth.py`, `admin.py`, `links.py`, `profiles.py`) → separate Shortener and Link Tree workspaces → desktop sidebar and mobile top navigation → local QR generation → rate limiting + security headers → tests → docs.
 4. **Review** — Ran a five-axis code review (correctness, readability, architecture, security, performance). Fixed UI rendering and API inconsistencies.
-5. **Ship** — Verified all pre-launch checks pass (31 tests, ruff clean, no secrets, structured errors everywhere). Deployed to Render with Neon PostgreSQL (free, permanent database).
+5. **Ship** — Verified the local suite passes (73 passed and one optional PostgreSQL test skipped), Ruff and JavaScript checks are clean, and no secrets are included. The reference deployment uses Render with Neon PostgreSQL and Cloudinary.
 
 **What Claude Code did:** Wrote all the code, ran tests, fixed bugs, applied the agent-skills workflows automatically.
 **What I did:** Drove the decisions — what to build, answered spec questions (rate limits, reserved codes, URL restrictions), approved the plan, reviewed the output.
@@ -48,5 +48,6 @@ An autonomous agent that verifies endpoints against the API contract. It tests P
 
 ## What I'd Do Next
 
-1. **Custom domain** — Register a free domain and point it to the Render deployment.
-2. **Geographic Analytics** — Add detailed geographic analytics (clicks by country).
+1. **Custom domain** — Point a project-owned domain to the Render deployment.
+2. **Geographic Analytics** — Add privacy-conscious country-level click analytics.
+3. **Accessibility audit** — Extend keyboard, screen-reader, and contrast testing across every workflow.

@@ -3,99 +3,103 @@ marp: true
 theme: default
 paginate: true
 auto-advance: 20
+style: |
+  section { background: #F7FBEF; color: #2F3A1D; font-family: Arial, sans-serif; }
+  h1, h2 { color: #2F3A1D; }
+  strong { color: #476020; }
+  a { color: #476020; }
+  code { background: #E9F4D3; }
 ---
 
 # Swoosh
-### A Production-Hardened URL Shortener
+## Short links and link-in-bio pages that you own
 
-**Live:** url-shortener-api-jcbx.onrender.com
+**Live:** [swoo-sh.onrender.com](https://swoo-sh.onrender.com)
 
-Built with FastAPI + Neon PostgreSQL
-Hardened with validation, rate limiting, security headers, 31 tests
-Developed using spec-driven workflow and Addy Osmani's agent-skills
+FastAPI + Neon PostgreSQL + Cloudinary
 
----
-
-# Why Swoosh?
-
-**Problem:** Long URLs are ugly, break in chats, and hide analytics.
-
-**Solution:** Short, custom, trackable links with a clean glassmorphism UI.
-
-**What makes it production-ready:**
-- Multi-User JWT Authentication (Admin-created accounts)
-- Link Trees (Public Profiles) & Standalone Links
-- Input validation (Pydantic)
-- Rate limiting (30 req/min per IP)
-- Security headers on every response
-- Structured JSON errors
-- URL deduplication
-- Click tracking + full link lifecycle management
+Open source under the MIT License
 
 ---
 
-# How I Built It
+![bg right:48%](../screenshots/01_landing_desktop.png)
 
-**Workflow:** Spec → Plan → Build → Review → Ship (agent-skills lifecycle)
+# One account, two workspaces
 
-| Step | Tool | What happened |
-|------|------|---------------|
-| Spec | Claude Code | Wrote structured requirements doc |
-| Plan | Claude Code | Broke into steps and iterated for Multi-User/Trees |
-| Build | Claude Code | Modular architecture with modular routers |
-| MCP | mcp-server-sqlite | Live DB inspection during dev |
-| Skill | url-api-contract | Enforced API consistency across routers |
-| Agent | url-tester | Autonomously verified endpoints |
+**Shortener**
+- Create generated or custom short URLs.
+- Manage links, QR codes, and click analytics.
+
+**Link Tree**
+- Create up to five public profiles.
+- Share a bio, avatar, social links, and visit count.
+
+---
+
+![bg right:50%](../screenshots/09_public_tree_desktop.png)
+
+# Designed for real sharing
+
+- Public pages at `/u/{username}`
+- Responsive desktop and mobile layouts
+- Olive Ink and Warm Lime visual identity
+- Platform icons and QR codes generated locally
+- Administrator-created accounts
 
 ---
 
 # Architecture
 
-```
-Browser → FastAPI (Render) → Neon PostgreSQL
-              │
-        ┌─────┴─────┐
-        │ Rate Limit │  30 req/min per IP
-        │ Validation │  Pydantic validators
-        │ Security   │  Anti-XSS, anti-clickjacking
-        └───────────┘
+```text
+Browser (Vanilla HTML, CSS, JavaScript)
+                    |
+                    v
+             FastAPI on Render
+              /             \
+             v               v
+ Neon PostgreSQL         Cloudinary
+ links, users, stats     validated avatars
 ```
 
-**Endpoints:**
-- `POST /api/login` — User authentication (JWT)
-- `POST /api/admin/register` — Admin-created accounts
-- `POST /api/profiles/avatar` — Upload avatar to Cloudinary
-- `POST /api/profiles` — Create link tree profiles
-- `GET /api/links` — list all saved links
-- `DELETE /api/links/<code>` — remove a link
-- `GET /api/health` — monitoring
+- SQLite provides a simple local development path.
+- JWT protects private operations.
+- `X-Active-Profile` selects one of five Link Tree profiles.
+- Parameterized SQL supports SQLite and PostgreSQL.
 
 ---
 
-# What Got Hardened
+![bg right:48%](../screenshots/08_tree_dashboard_populated_desktop.png)
 
-| Area | Before | After |
-|------|--------|-------|
-| Architecture | Monolithic | Modular (routers, dependencies) |
-| Features | Single User | Multi-User Auth + Link Trees |
-| Rate limiting | None | 30/min on POST via slowapi |
-| Password | Single password | Multi-User JWT Auth (Admin-Created) |
-| Database | SQLite only | SQLite/PostgreSQL Migrations + Cloudinary avatars |
-| Config | Hardcoded | .env-driven + startup checks |
-| Tests | None | Full audit test suite passing |
-| Security | None | Headers, Rate limit, Secure secrets validation |
+# Production hardening
+
+- Validation, rate limits, headers, and secure startup
+- Atomic SQLite/PostgreSQL migrations
+- Neon backup and migration rehearsal
+- **73 local tests passing**
+- Ruff, JavaScript, and whitespace checks
 
 ---
 
-# What I'd Do Next
+# Open source and ready to learn from
 
-✅ Deployed — live on Render + Neon PostgreSQL (free, permanent)
+The repository includes:
 
-**Next steps:**
-- Add authentication for personal link management
-- Add geographic analytics (clicks by country)
-- Custom domain with HTTPS
+- Beginner-friendly and developer setup instructions
+- Architecture, decisions, and implementation patterns
+- API examples and deployment checklist
+- Desktop and mobile product screenshots
+- Contribution and security-reporting guides
+- A guarded PostgreSQL migration integration test
 
-**GitHub:** github.com/ahk1542001-wq/url-shortener-api
+**GitHub:** [github.com/ahk1542001-wq/url-shortener-api](https://github.com/ahk1542001-wq/url-shortener-api)
 
-**Thank you!** ⭐
+---
+
+# Next steps
+
+1. Add a project-owned custom domain.
+2. Expand privacy-conscious analytics.
+3. Complete an accessibility audit.
+4. Add automated browser regression screenshots.
+
+**Thank you.**

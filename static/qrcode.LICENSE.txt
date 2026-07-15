@@ -1,0 +1,5 @@
+QRCode.js v1.0.0
+Copyright (c) 2012 davidshimjs
+
+Licensed under the MIT License.
+Source: https://github.com/davidshimjs/qrcodejs

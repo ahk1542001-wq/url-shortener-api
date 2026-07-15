@@ -4,11 +4,16 @@
 - Use `--glass-bg` and `--glass-border` CSS variables for cards and UI panels.
 - Add `backdrop-filter: blur(16px)` to achieve the frosted glass effect.
 - Keep the UI minimal and focused. Avoid clutter.
+- Use Olive Ink (`#2F3A1D`) for primary surfaces and Warm Lime (`#CFFF74`) for primary actions and active states.
+- Use the desktop sidebar at larger viewports and the sticky labeled top navigation on mobile.
+- Keep Shortener and Link Tree controls in their own workspaces.
+- Verify changed layouts at desktop and mobile widths before shipping.
 
 ## Testing
 - Tests are written in Pytest (`tests/`).
 - Use the `auth_client` fixture (from `conftest.py`) for all endpoint tests that require authentication.
 - Database access is mocked/patched to use an in-memory SQLite database (`test.db`) during testing via `conftest.py`.
+- UI contract tests assert required navigation, QR, profile switching, and public-tree elements without requiring a browser.
 
 ## API Responses
 - All errors must return a structured JSON response:
