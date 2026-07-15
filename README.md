@@ -160,11 +160,9 @@ Open `http://localhost:8000` to interact with the web interface.
 | `RATE_LIMIT` | `30/minute` | Rate limit on POST /api/shorten |
 | `JWT_SECRET` | (required) | Secret key used to sign JWT tokens |
 | `ADMIN_PASSWORD_HASH`| (required) | bcrypt hash for the default admin user |
-| `R2_ENDPOINT` | (empty) | Cloudflare R2 S3 API Endpoint |
-| `R2_ACCESS_KEY_ID` | (empty) | Cloudflare R2 Access Key ID |
-| `R2_SECRET_ACCESS_KEY` | (empty) | Cloudflare R2 Secret Access Key |
-| `R2_BUCKET` | (empty) | Cloudflare R2 Bucket Name |
-| `R2_PUBLIC_BASE_URL` | (empty) | Cloudflare R2 Public Base URL for serving uploaded avatars |
+| `CLOUDINARY_CLOUD_NAME` | (empty) | Cloudinary cloud name for avatar storage |
+| `CLOUDINARY_API_KEY` | (empty) | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | (empty) | Cloudinary API secret |
 
 ## Error Responses
 

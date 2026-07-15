@@ -103,7 +103,7 @@ erDiagram
 - **Standalone Mode**: When a user creates a link outside of a Link Tree, `profile_id` is set to `NULL`. The link is only associated with `user_id`.
 - **Link Tree Mode**: Links created within a profile are assigned a `profile_id`, determining which links appear on the public `/api/users/{username}/tree` page.
 - **Daily Stats**: Aggregate counts of clicks grouped by day. The foreign key `link_id` references `links(id)` with `ON DELETE CASCADE`.
-- **Avatar Storage**: Avatars are stored in Cloudflare R2. The `profiles.avatar_url` is the public URL of the avatar and `profiles.avatar_object_key` is the UUID-based key.
+- **Avatar Storage**: Avatars are stored in Cloudinary. The `profiles.avatar_url` is the secure delivery URL and the legacy-named `profiles.avatar_object_key` column stores the UUID-based Cloudinary `public_id` used for deletion.
 - **Schema Migration Version**: Handled via the `schema_versions` table which keeps track of applied database migration scripts.
 
 ## 5. Security & Protection Mechanisms
@@ -124,4 +124,4 @@ The application is deployed to **Render** as a Web Service utilizing a **Docker 
    - `DATABASE_URL`: Connection string for Neon PostgreSQL database.
    - `JWT_SECRET`: Secure 32-character (or longer) signing key for JWT tokens.
    - `ADMIN_PASSWORD_HASH`: Hashed bcrypt password for the initial admin account.
-   - `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`: Configuration parameters for Cloudflare R2 avatar image storage.
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Configuration parameters for Cloudinary avatar image storage.

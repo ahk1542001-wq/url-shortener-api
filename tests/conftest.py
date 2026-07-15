@@ -9,6 +9,9 @@ os.environ["JWT_SECRET"] = "test-secret-32-chars-long-security-key"
 os.environ["ADMIN_PASSWORD_HASH"] = (
     "$2b$12$V5/S5.d2nQ25h9YQp6n2re4u5S5u5S5u5S5u5S5u5S5u5S5u5S5u5"  # Valid dummy hash for tests
 )
+os.environ["CLOUDINARY_CLOUD_NAME"] = ""
+os.environ["CLOUDINARY_API_KEY"] = ""
+os.environ["CLOUDINARY_API_SECRET"] = ""
 
 from fastapi.testclient import TestClient
 from src.main import app
